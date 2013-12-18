@@ -1,0 +1,55 @@
+\name{make.region}
+\alias{make.region}
+\title{Creates a Region object}
+\usage{
+  make.region(region.name, strata.name = character(0),
+    units, area = numeric(0), shapefile = NULL,
+    coords = list(), gaps = list())
+}
+\arguments{
+  \item{region.name}{the region name}
+
+  \item{strata.name}{the region name}
+
+  \item{units}{the units given as a character (either 'm'
+  or 'km')}
+
+  \item{area}{the area of the region (optional - if not
+  supplied it will be calculated for you if you supply a
+  shapefile)}
+
+  \item{shapefile}{a shapefile of the region}
+
+  \item{coords}{list of polygons describing the areas of
+  interest}
+
+  \item{gaps}{list of polygons describing the areas to be
+  excluded}
+}
+\value{
+  object of class Region
+}
+\description{
+  This creates an instance of the Region class. If the user
+  supplied a shapefile all information will be extracted
+  from here. Otherwise the user needs to specify a list of
+  polygons describing the areas of interest (coords) and
+  optionally a list of polygons describing the areas to be
+  excluded (gaps). If area is not specified it will be
+  calculated.
+}
+\examples{
+coords <- gaps <- list()
+coords[[1]] <- list(data.frame(x = c(0,1000,1000,0,0), y = c(0,0,
+ 1000,1000,0)))
+gaps[[1]] <- list(data.frame(x = c(400,600,500,350,400), y = c(100,
+ 250,600,120,100)))
+
+region <- make.region(region.name = "study.area", units = "m",
+ coords = coords, gaps = gaps)
+plot(region)
+}
+\author{
+  Laura Marshall
+}
+

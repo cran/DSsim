@@ -1,0 +1,19 @@
+\docType{class}
+\name{Simulation.Summary-class}
+\alias{show,Simulation.Summary-method}
+\alias{Simulation.Summary-class}
+\title{Class "Simulation.Summary"}
+\description{
+  Class \code{"Simulation.Summary"} is an S4 class
+  containing a summary of the simulation results. This is
+  returned when \code{summary(Simulation)} is called. If it
+  is not assigned to a variable the object will be
+  displayed via the \code{show} method.
+}
+\section{Methods}{
+  \describe{ \item{\code{show}}{\code{signature=(object =
+  "Simulation.Summary")}: prints the contents of the object
+  in a user friendly format.} }
+}
+\keyword{classes}
+

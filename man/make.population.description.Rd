@@ -1,0 +1,56 @@
+\name{make.population.description}
+\alias{make.population.description}
+\title{Creates a Population.Description object}
+\usage{
+  make.population.description(region.obj, density.obj,
+    cluster.size.table = data.frame(NULL),
+    size.distribution = character(0),
+    size.param = numeric(0), N = numeric(0),
+    fixed.N = TRUE, average.D = numeric(0))
+}
+\arguments{
+  \item{region.obj}{the Region object in which this
+  population exists.}
+
+  \item{density.obj}{the Density object describing the
+  distribution of the individuals / clusters.}
+
+  \item{cluster.size.table}{- data.frame with two columns
+  size (giving the cluster sizes) and prob (giving the
+  probability that a cluster is of that size). prob must
+  sum to 1.}
+
+  \item{size.distribution}{- not yet implemented}
+
+  \item{size.param}{- not yet implemented}
+
+  \item{N}{the number of individuals / clusters in a
+  population}
+
+  \item{fixed.N}{a logical value. If TRUE the population is
+  generated from the value of N otherwise it is generated
+  from the density description.}
+
+  \item{average.D}{not currently implemented.}
+}
+\value{
+  object of class Population.Description
+}
+\description{
+  Creates an object which describes a population. The
+  values in this object will be used to create instances of
+  the population
+}
+\examples{
+\dontrun{
+pop.description <- make.population.description(N = 1000,
+ density.obj = pop.density, region = region, fixed.N = TRUE)
+ }
+}
+\author{
+  Laura Marshall
+}
+\seealso{
+  \code{\link{make.region}}, \code{\link{make.density}}
+}
+
