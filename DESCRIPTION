@@ -3,8 +3,8 @@ Depends: shapefiles, splancs, mrds, mgcv, methods
 Suggests: testthat, parallel
 Type: Package
 Title: Distance Sampling Simulations
-Version: 1.0.0
-Date: 2013-12-18
+Version: 1.0.1
+Date: 2014-01-13
 LazyLoad: yes
 Author: Laura Marshall <lhm@st-and.ac.uk>
 Maintainer: Laura Marshall <lhm@st-and.ac.uk>
@@ -41,7 +41,7 @@ Collate: 'generic.functions.R' 'Region.R' 'Detectability.R'
         'get.bound.box.R' 'get.shapefile.names.R' 'get.sampler.info.R'
         'LT.Systematic.Design.R' 'LT.Random.Design.R'
         'LT.User.Specified.Design.R' 'display.glossary.R'
-Packaged: 2013-12-19 03:55:02 UTC; laura
+Packaged: 2014-03-18 16:07:23 UTC; laura
 NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2013-12-19 06:57:10
+Date/Publication: 2014-03-18 17:18:09

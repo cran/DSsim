@@ -1,7 +1,7 @@
-417663a2288ae7e1da945ccfcfcca04f *DESCRIPTION
-4741193626a4cfde5623ffdfcb7c0ac8 *NAMESPACE
-baadb01aa8a837572d9e4ef47b3a0ee8 *R/Class.Constructors.R
-dfec2b887a964470ddd92bb579383611 *R/DDF.Analysis.R
+63b2d4a2310d878ab007f705201163ff *DESCRIPTION
+0b854680fecdfe14a9cb31d8c6b6e9e7 *NAMESPACE
+94a21ec963f935cbbb1757d08e577d34 *R/Class.Constructors.R
+8b769c01a6519dce7b52656ab40eea07 *R/DDF.Analysis.R
 8c1c54ae013cdccc8b91b862b65d170a *R/DDF.Data.R
 e39c04a1d408686ff63e181500d893d0 *R/DS.Analysis.R
 92af5ebc9d5cbfe6624664cd8de5bc91 *R/DSM.Analysis.R
@@ -88,11 +88,11 @@ b0a1e8e98f5ed95a12d0297716e0efdb *man/create.survey.results-methods.Rd
 b3b93898126de5b1f7628330b844aea1 *man/get.distance.data-methods.Rd
 79a819c04efd7738c20dde5c2b554580 *man/make.ddf.analysis.list.Rd
 6f58a434b8813a09cd30cddecd5835a9 *man/make.density.Rd
-26dc113efb4b493097f7947cd2c84a0e *man/make.design.Rd
+96802b3019f973db5bf56b9cbc9f81c3 *man/make.design.Rd
 a3fc2aace77374160cd38e80590e942d *man/make.detectability.Rd
 54815f62974eea4dacdaebd001cd99c9 *man/make.population.description.Rd
 4f0eacc491fccf9cadd626fbb88c7de3 *man/make.region.Rd
-78304c65800e24ce349aadb6e7edb12e *man/make.simulation.Rd
+bb26d2ab92f21163082746086054786b *man/make.simulation.Rd
 2c7da20f60d74322900540219c63672d *man/rename.duplicates.Rd
 7cf21a492cc6e1a8a831402268b8dc13 *man/run-methods.Rd
 0e7175e8b884fdab5769326b8a0af4f5 *man/run.analysis-methods.Rd

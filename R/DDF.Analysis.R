@@ -1,3 +1,7 @@
+#' @include generic.functions.R
+#' @include DDF.Data.R
+NULL
+
 #' Class "DDF.Analysis" 
 #' 
 #' Class \code{"DDF.Analysis"} is an S4 class describing a detection function
