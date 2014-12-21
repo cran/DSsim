@@ -5,6 +5,7 @@
 #' Class "Line.Transect" contains an instance of a Line Transect Survey
 #'
 #' @name Line.Transect-class
+#' @title S4 Class "Line.Transect"
 #' @docType class
 #' @section Slots: 
 #' \describe{
@@ -25,10 +26,10 @@ setClass("Line.Transect", representation(design.obj = "character", sampler.info 
 setMethod(
   f="initialize",
   signature="Line.Transect",
-  definition=function(.Object, region, sampler.info = NULL, shapefile = NULL){
+  definition=function(.Object, region, sampler.info = NULL, shapefile = NULL, meta = NULL){
     #Input pre-processing
     if(is.null(sampler.info) & !is.null(shapefile)){      
-      sampler.info <- get.sampler.info(shapefile, region)
+      sampler.info <- get.sampler.info(shapefile, region, meta)
     }else{      
     }
     #Set slots
@@ -44,7 +45,7 @@ setMethod(
 setValidity("Line.Transect",
   function(object){
     sampler.info.names <- names(object@sampler.info)
-    required.var.names <- c("ID", "start.X", "start.Y", "end.X", "end.Y", "length", "region")
+    required.var.names <- c("ID", "start.X", "start.Y", "end.X", "end.Y", "length", "region", "d7.length")
     if(length(sampler.info.names) != length(required.var.names)){
       return("The sampler.info data.frame contains an incorect number of variables.")
     }

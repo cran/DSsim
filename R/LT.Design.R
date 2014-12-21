@@ -1,3 +1,6 @@
+#' @include generic.functions.R
+#' @include Survey.Design.R
+
 ################################################################################
 # CONSTRUCT CLASS AND DEFINE INITIALIZE AND VALIDITY
 ################################################################################
@@ -7,6 +10,7 @@
 #' Virtual Class \code{"LT.Design"} is an S4 class detailing the type of line transect 
 #' design. 
 #' @name LT.Design-class
+#' @title S4 Class "LT.Design"
 #' @docType class
 #' @section Slots: 
 #' \describe{
@@ -83,9 +87,19 @@ setMethod(
     file.index <- ifelse(is.null(index), object@file.index, index)
     #Input pre-processing
     if(read.from.file){
+      #Load the shapefle
       shapefile <- read.shapefile(paste(object@path, "/", object@filenames[file.index], sep=""))
+      #cat("Reading shapefile: ",paste(object@path, "/", object@filenames[file.index], sep=""), fill = T)
+      #Load the meta file if it exists - describes which transects are in which strata
+      meta <- suppressWarnings(try(read.table(paste(object@path, "/Meta.txt", sep="")), silent = TRUE))
+      if(class(meta) == "try-error"){
+        meta <- NULL
+      }
+      if(!is.null(meta)){
+        meta <- meta[meta[,1] == object@filenames[file.index],]
+      }
       #lt.survey <- make.line.transect(region = region, shapefile = shapefile)
-      line.transect <- new(Class = "Line.Transect", region = region, shapefile = shapefile)
+      line.transect <- new(Class = "Line.Transect", region = region, shapefile = shapefile, meta = meta)
     }else{
       message("Only pre-generated surveys are currently implemented")
       line.transect <- NULL

@@ -1,3 +1,15 @@
+# @include Simulation.R
+# @include DS.Analysis.R
+# @include Population.Description.R
+# @include Density.R
+# @include LT.Systematic.Design.R
+# @include LT.Random.Design.R
+# @include LT.EqAngle.ZZ.Design.R
+# @include LT.EqSpace.ZZ.Design.R
+# @include LT.User.Specified.Design.R
+# @include Region.R
+
+
 #' Creates a Region object
 #'
 #' This creates an instance of the Region class. If the user supplied a 
@@ -227,8 +239,11 @@ make.detectability <- function(key.function, scale.param, shape.param = numeric(
 #'
 #' @param dsmodel list of distance sampling model formula specifying the detection function (see \code{?ddf} for further details)
 #' @param mrmodel not yet implemented
-#' @param method only "ds" normal distance sampling currently implemented
-#' @param criteria model selection criteria (AIC, AICc, BIC) - only AIC implemented at present.
+#' @param method character only "ds" normal distance sampling currently implemented
+#' @param criteria character model selection criteria (AIC, AICc, BIC) - only AIC implemented at present.
+#' @param truncation numeric truncation distance for analyses
+#' @param binned.data logical whether the data should be analsed in bins
+#' @param cutpoints gives the cutpoints of the binned data
 #' @return list of objects of class DDF.Analysis 
 #' @export
 #' @author Laura Marshall
@@ -238,11 +253,11 @@ make.detectability <- function(key.function, scale.param, shape.param = numeric(
 #'  formula = ~1),~cds(key = "hr", formula = ~1)), method = "ds", 
 #'  criteria = "AIC")
 #'
-make.ddf.analysis.list <- function(dsmodel, mrmodel = NULL, method, criteria){
+make.ddf.analysis.list <- function(dsmodel, mrmodel = NULL, method, criteria = "AIC", truncation = numeric(0), binned.data = FALSE, cutpoints = numeric(0)){
   ddf.analyses <- list()
   if(method == "ds"){
     for(a in seq(along = dsmodel)){
-      ddf.analyses[[a]] <- new(Class = "DS.Analysis", dsmodel = dsmodel[[a]], criteria = criteria)
+      ddf.analyses[[a]] <- new(Class = "DS.Analysis", dsmodel = dsmodel[[a]], criteria = criteria, truncation = truncation, binned.data = binned.data, cutpoints = cutpoints)
     }
   }else{
     message("Double observer methods are not yet implemented")

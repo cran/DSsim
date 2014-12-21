@@ -1,4 +1,5 @@
-
+#' @include Detectability.R
+#' 
 ################################################################################
 # CONSTRUCT CLASS AND DEFINE INITIALIZE AND VALIDITY
 ################################################################################
@@ -9,6 +10,7 @@
 #' in the form of an object of calss Detectability.
 #'
 #' @name Population-class
+#' @title S4 Class "Population"
 #' @docType class
 #' @section Slots: 
 #' \describe{

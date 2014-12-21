@@ -1,3 +1,10 @@
+#' @include Detectability.R
+#' @include Population.Description.R
+#' @include Survey.Design.R
+#' @include Region.R
+#' @include DSM.Analysis.R
+#' @include generic.functions.R
+
 #' Class "Simulation" 
 #' 
 #' Class \code{"Simulation"} is an S4 class containing descriptions of the 
@@ -7,6 +14,7 @@
 #' populations, simulating the survey and completing the analyses. 
 #'
 #' @name Simulation-class
+#' @title S4 Class "Simulation"
 #' @docType class
 #' @section Slots: 
 #' \describe{
@@ -23,13 +31,13 @@
 #'  \item{\code{detectability}}{Object of class \code{"Detectability"}; a
 #'  description of the detectability of the population.}
 #'  \item{\code{ddf.analyses}}{Object of class \code{"list"}; a list of
-#'  object of class DDF.Analysis. These are fitted and the one with the
+#'  objects of class DDF.Analysis. These are fitted and the one with the
 #'  minimum criteria is selected and used in predicting N and D.}
 #'  \item{\code{dsm.analysis}}{Object of class \code{"DSM.Analysis"}; Not
 #'  yet implemented.}
 #'  \item{\code{ddf.param.ests}}{Object of class \code{"array"}; stores the
 #'  parameters associated with the detection function.}
-#'  \item{\code{results}}{Object of class \code{"logical"}; stores
+#'  \item{\code{results}}{A \code{"list"} of \code{"arrays"}; stores
 #'  the estimated of abundance and density as well as other measures
 #'  of interest.}
 #'  }
@@ -133,7 +141,10 @@ setValidity("Simulation",
 setMethod(
   f="summary",
   signature="Simulation",
-  definition=function(object, ..., na.rm = FALSE){
+  definition=function(object, description.summary = TRUE, ...){
+    if(description.summary){
+      description.summary()
+    }
     x <- object
     reps <- dim(x@results$individuals$N)[3]-2
     #Calculate true values
@@ -158,7 +169,7 @@ setMethod(
     }else{
       true.N.clusters <- N
       #calculate expected cluster size
-      size.table <- simulation@population.description@size.table
+      size.table <- x@population.description@size.table
       true.expected.s <- sum(size.table$size*size.table$prob)
       #calculate expected number of individuals
       true.N.individuals <- true.N.clusters*true.expected.s
@@ -177,8 +188,9 @@ setMethod(
         zero.n[i, strat] <- ifelse(x@results$individuals$summary[strat, "n", i] == 0, TRUE, FALSE)
       }
     }
-    percent.capture <- (apply(capture, 2, sum)/nrow(capture))*100
-    percent.capture.D <- (apply(capture.D, 2, sum)/nrow(capture.D))*100    
+    #Calculates the percentage of times the true value is whithin the confidence intervals
+    percent.capture <- (apply(capture, 2, sum, na.rm = TRUE)/nrow(na.omit(capture)))*100
+    percent.capture.D <- (apply(capture.D, 2, sum, na.rm = TRUE)/nrow(na.omit(capture)))*100    
     zero.n <- apply(zero.n, 2, sum)
     individual.summary <- data.frame(mean.Cover.Area = x@results$individuals$summary[,"CoveredArea","mean"], 
                                      mean.Effort = x@results$individuals$summary[,"Effort","mean"],
@@ -215,8 +227,8 @@ setMethod(
           zero.n[i, strat] <- ifelse(x@results$clusters$summary[strat, "n", i] == 0, TRUE, FALSE)
         }
       }
-      percent.capture <- (apply(capture, 2, sum)/nrow(capture))*100
-      percent.capture.D <- (apply(capture.D, 2, sum)/nrow(capture.D))*100    
+      percent.capture <- (apply(capture, 2, sum, na.rn = TRUE)/nrow(na.omit(capture)))*100
+      percent.capture.D <- (apply(capture.D, 2, sum, na.rm = TRUE)/nrow(na.omit(capture.D)))*100  
       zero.n <- apply(zero.n, 2, sum)
       cluster.summary <- data.frame(mean.Cover.Area = x@results$clusters$summary[,"CoveredArea","mean"], 
                                        mean.Effort = x@results$clusters$summary[,"Effort","mean"],
@@ -254,13 +266,14 @@ setMethod(
                             sd.estimate.Pa = x@results$Detection[,"Pa","sd"],
                             mean.ESW = x@results$Detection[,"ESW","mean"],  
                             sd.ESW = x@results$Detection[,"ESW","sd"])
-    
+    #Find how many iterations failed
+    no.fails <- length(which(is.na(object@results$Detection[1,1,1:object@reps])))
     #print(individual.N.est)  
     individuals <- list(summary = individual.summary, N = individual.N, D = individual.D)
     if(!is.null(x@results$clusters)){
-      summary.x <- new(Class = "Simulation.Summary", region.name = x@region@region.name, individuals = individuals, clusters = clusters, expected.size = expected.size, detection = detection)
+      summary.x <- new(Class = "Simulation.Summary", region.name = x@region@region.name, total.reps = object@reps, failures = no.fails, individuals = individuals, clusters = clusters, expected.size = expected.size, detection = detection)
     }else{  
-      summary.x <- new(Class = "Simulation.Summary", region.name = x@region@region.name, individuals = individuals, detection = detection)
+      summary.x <- new(Class = "Simulation.Summary", region.name = x@region@region.name, total.reps = object@reps, failures = no.fails, individuals = individuals, detection = detection)
     } 
     return(summary.x)
   }    
@@ -305,7 +318,7 @@ setMethod(
 setMethod(
   f="generate.transects",
   signature="Simulation",
-  definition=function(object, read.from.file = TRUE, write.to.file = FALSE){
+  definition=function(object, read.from.file = TRUE, write.to.file = FALSE, region = NULL){
     region <- object@region
     transect <- generate.transects(object@design, region = region)
     return(transect)
@@ -353,20 +366,15 @@ setMethod(
   f="run.analysis",
   signature=c("Simulation","LT.Survey.Results"),
   definition=function(object, data, dht = TRUE){
-    dist.data <- survey.results@ddf.data
-    ddf.analyses <- object@ddf.analyses
-    criteria <- NULL
-    results <- list()
-    for(a in seq(along = ddf.analyses)){
-      results[[a]] <- run.analysis(ddf.analyses[[a]], ddf.dat = dist.data)
-      criteria <- c(criteria, results[[a]]$criterion)
+    #dist.data <- survey.results@ddf.data
+    best.model <- run.analysis(object, data@ddf.data)
+    #If ddf has converged and dht it TRUE
+    if(dht & !is.null(best.model)){
+      #Calculate density/abundance
+      dht.results <- dht(best.model, data@region.table@region.table, data@sample.table@sample.table, data@obs.table@obs.table)
+      return(list(ddf = best.model, dht = dht.results))
     }
-    best.model <- which(criteria == min(criteria))
-    if(dht){
-      dht.results <- dht(results[[best.model]], survey.results@region.table@region.table, survey.results@sample.table@sample.table, survey.results@obs.table@obs.table)
-      return(list(ddf = results[[best.model]], dht = dht.results))
-    }
-    return(list(ddf = results[[best.model]]))
+    return(list(ddf = best.model))
   }    
 )   
     
@@ -374,6 +382,7 @@ setMethod(
 #' @aliases run.analysis,Simulation,DDF.Data-method
 setMethod(
   f="run.analysis",
+  #signature=c("Simulation","Single.Obs.DDF.Data"),
   signature=c("Simulation","DDF.Data"),
   definition=function(object, data, dht = TRUE){
     ddf.analyses <- object@ddf.analyses
@@ -381,10 +390,19 @@ setMethod(
     results <- list()
     for(a in seq(along = ddf.analyses)){
       results[[a]] <- run.analysis(ddf.analyses[[a]], data)
-      criteria <- c(criteria, results[[a]]$criterion)
+      if(!is.na(results[[a]][1])){
+        criteria <- c(criteria, results[[a]]$criterion)  
+      }else{
+        criteria <- c(criteria, NA) 
+      }
     }
-    best.model <- which(criteria == min(criteria))
-    return(results[[best.model]])
+    #check that at least one model worked
+    if(length(which(!is.na(criteria))) > 0){
+      best.model <- which(criteria == min(na.omit(criteria)))
+      return(results[[best.model]])
+    }else{
+      return(NULL)
+    }
   }    
 )
 
@@ -395,7 +413,16 @@ setMethod(
 setMethod(
   f="run",
   signature="Simulation",
-  definition=function(object, run.parallel = FALSE, max.cores = NA){
+  definition=function(object, run.parallel = FALSE, max.cores = NA, save.data = FALSE, load.data = FALSE, data.path = character(0)){
+    #Note options save.data, load.data, data.path are not implemented in simulations run in parallel.
+    #check the data.path ends in "/"
+    if(length(data.path) > 0){
+      temp.path <- strsplit(data.path, split = "")
+      if(temp.path[length(temp.path)] != "/"){
+        data.path <- paste(data.path, "/", sep = "")
+      }
+      rm(temp.path)  
+    }
     #set the transect index to 1
     orig.file.index <- object@design@file.index
     object@design@file.index <- 1
@@ -410,13 +437,13 @@ setMethod(
       # intitialise the cluster
       myCluster <- makeCluster(nCores) 
       clusterEvalQ(myCluster, {require(DSsim)})
-      results <- parLapply(myCluster, X = as.list(1:object@reps), fun = single.simulation.loop, object = object)
+      results <- parLapply(myCluster, X = as.list(1:object@reps), fun = single.simulation.loop, object = object, save.data = save.data, load.data = load.data, data.path = data.path)
       object <- accumulate.PP.results(simulation = object, results = results)
       stopCluster(myCluster)
     }else{
       #otherwise loop
       for(i in 1:object@reps){ 
-        object@results <- single.simulation.loop(i, object) 
+        object@results <- single.simulation.loop(i, object, save.data = save.data, load.data = load.data, data.path = data.path) 
       }
     }  
     object@results <- add.summary.results(object@results)

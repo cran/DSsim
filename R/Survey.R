@@ -1,3 +1,5 @@
+#' @include Population.R
+#' @include generic.functions.R
 
 ################################################################################
 # CONSTRUCT CLASS AND DEFINE INITIALIZE AND VALIDITY
@@ -7,6 +9,7 @@
 #' Class \code{"Survey"} is an S4 class containing an instance of a population. 
 #'
 #' @name Survey-class
+#' @title S4 Class "Survey"
 #' @docType class
 #' @section Slots: 
 #' \describe{

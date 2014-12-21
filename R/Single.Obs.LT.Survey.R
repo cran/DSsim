@@ -1,3 +1,6 @@
+#' @include LT.Survey.R
+#' @include generic.function.R
+
 ################################################################################
 # CONSTRUCT CLASS AND DEFINE INITIALIZE AND VALIDITY
 ################################################################################
@@ -8,6 +11,7 @@
 #' and a set of transects. 
 #'
 #' @name Single.Obs.LT.Survey-class
+#' @title S4 Class "Single.Obs.LT.Survey"
 #' @docType class
 #' @keywords classes         
 #' @export
@@ -55,7 +59,7 @@ setMethod(
     population <- object@population
     line.transect <- object@line.transect
     poss.distances <- calc.poss.detect.dists(population, line.transect, perp.truncation = object@perpendicular.truncation)
-    n.in.covered <- nrow(poss.distances)
+    n.in.covered <- poss.distances$distance
     dist.data <- simulate.detections(poss.distances, population@detectability)
     dist.data <- rename.duplicates(dist.data)
     dist.data <- dist.data[,c("object", "transect.ID", "distance", "x", "y")]    

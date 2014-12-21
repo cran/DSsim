@@ -1,3 +1,6 @@
+#' @include generic.functions.R
+#' @include Density.R
+
 #' Class "Population.Description" 
 #' 
 #' Class \code{"Population.Description"} is an S4 class containing a 
@@ -5,6 +8,7 @@
 #' example population.
 #'                                  
 #' @name Population.Description-class
+#' @title S4 Class "Population.Description"
 #' @docType class
 #' @section Slots: 
 #' \describe{
@@ -71,6 +75,9 @@ setMethod(
 )
 setValidity("Population.Description",
   function(object){
+    if(length(object@N) > 0 & sum(object@N) <= 0){
+      return("You must provide a positive, non-zero abundance")
+    }
     if(object@size){
       if(sum(object@size.table$prob) != 1){
         return("Probabilities in cluster size table must sum to 1")
