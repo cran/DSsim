@@ -68,8 +68,7 @@ setMethod(
       gaps <- polygons$gaps  
     }else if(length(coords) == 0 & is.null(shapefile)){
       #complains if neither the coordinates or the shapefile are supplied
-      message("Error: You must provide either coordinates or a shapefile")
-      return(NULL)
+      stop("You must provide either coordinates or a shapefile", call. = FALSE)
     }
     #Gets the minimum bounding box
     boundbox <- get.bound.box(coords)
@@ -86,7 +85,10 @@ setMethod(
     .Object@coords      <- coords
     .Object@gaps        <- gaps
     #Check object is valid
-    validObject(.Object)
+    valid <- try(validObject(.Object), silent = TRUE)
+    if(class(valid) == "try-error"){
+      stop(attr(valid, "condition")$message, call. = FALSE)
+    }
     # return object
     return(.Object) 
   }
@@ -105,16 +107,16 @@ setValidity("Region",
         }
       }
     }
-    if(length(which(object@area < 0)) > 0){
-      return("Cannot have negative areas")
+    if(length(which(object@area <= 0)) > 0){
+      return("All areas must be greater than 0")
     }    
     if(length(object@coords) != length(object@gaps)){
-      return("mismatch in coords and gaps list lengths for strata")
+      return("The lengths of the coords and gaps lists differ, these must be the same and equal to the number of strata.")
     }
     #print(paste("length of coords: ",length(object@coords)))
     #print(object@strata.name) 
     if(length(object@coords) > 1 & length(object@coords) != length(object@strata.name)){
-      return("Number of strata names differs to number of strata in the shapefile")
+      return("Number of strata names differs to number of strata in the shapefile.")
     }
     return(TRUE)
   }
@@ -144,9 +146,10 @@ setMethod(
 setMethod(
   f="plot",
   signature="Region",
-  definition=function(x, y, type = "l", add = FALSE, plot.units = character(0),...){
-    plot.list <- function(list.coords, type, col = 1){
-      lapply(list.coords, FUN = lines, type = type, col = col)
+  definition=function(x, y, add = FALSE, plot.units = character(0), region.col = NULL, gap.col = NULL, ...){
+    plot.list <- function(list.coords, border = 1, fill.col = NULL){
+      #lapply(list.coords, FUN = lines, type = type, col = col)
+      lapply(list.coords, FUN = polygon, border = border, col = fill.col)
       invisible(list.coords)                          
     }
     #Set up plot
@@ -169,7 +172,7 @@ setMethod(
           axis(1, at = xticks, labels = xticks*1000)
           axis(2, at = yticks, labels = yticks*1000)
         }else{
-          message("The requested conversion of units is not currently supported.")
+          warning("The requested conversion of units is not currently supported, this option will be ignored.", call. = FALSE, immediate. = TRUE)
         }
       }else{
         #no unit conversion needed
@@ -177,8 +180,8 @@ setMethod(
         axis(2, at = yticks, labels = yticks)
       }
     }
-    lapply(x@coords, FUN = plot.list, type = type)
-    lapply(x@gaps, FUN = plot.list, type = type, col = 1)
+    lapply(x@coords, FUN = plot.list, fill.col = region.col)
+    lapply(x@gaps, FUN = plot.list, fill.col = gap.col)
     invisible(x)
   }    
 ) 

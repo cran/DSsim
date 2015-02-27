@@ -9,8 +9,9 @@ make.density(region.obj, density.surface = list(), x.space, y.space,
 \arguments{
 \item{region.obj}{the Region object in which the density grid will be created}
 
-\item{density.surface}{a dataframe describing the density with columns
-x, y,  and density.}
+\item{density.surface}{Object of class \code{list}; list of 
+data.frames with the columns x, y and density. There must be one 
+data.frame for each strata.}
 
 \item{x.space}{the intervals in the grid in the x direction}
 
@@ -47,7 +48,12 @@ pop.density <- add.hotspot(pop.density, centre = c(500, 700),
 pop.density <- add.hotspot(pop.density, centre = c(300, 100),
  sigma = 100, amplitude = -0.15)
 
+#New plot features
 plot(pop.density)
+plot(region, add = TRUE)
+
+#Old style plotting
+plot(pop.density, contours = FALSE, old.style = TRUE)
 plot(region, add = TRUE)
 }
 }

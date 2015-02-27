@@ -122,7 +122,7 @@ make.design <- function(transect.type, design.details, region.obj, design.axis =
     }
   }
   if(is.null(design)){
-    message("Apologies, this design type is not supported at present.")
+    stop("Apologies, this design type is not supported at present. You should use the line transect user specified design options.", call. = FALSE)
   }
   return(design)
 }
@@ -137,8 +137,9 @@ make.design <- function(transect.type, design.details, region.obj, design.axis =
 #' be created from these.
 #'
 #' @param region.obj the Region object in which the density grid will be created
-#' @param density.surface a dataframe describing the density with columns
-#'   x, y,  and density.
+#' @param density.surface Object of class \code{list}; list of 
+#'  data.frames with the columns x, y and density. There must be one 
+#'  data.frame for each strata.
 #' @param x.space the intervals in the grid in the x direction
 #' @param y.space the intervals in the grid in the y direction
 #' @param constant a value describing a constant density across the surface.
@@ -161,13 +162,19 @@ make.design <- function(transect.type, design.details, region.obj, design.axis =
 #' pop.density <- add.hotspot(pop.density, centre = c(300, 100), 
 #'  sigma = 100, amplitude = -0.15)
 #' 
+#' #New plot features
 #' plot(pop.density)
 #' plot(region, add = TRUE)
+#' 
+#' #Old style plotting
+#' plot(pop.density, contours = FALSE, old.style = TRUE)
+#' plot(region, add = TRUE)
+#' 
 #' }
 make.density <- function(region.obj, density.surface = list(), x.space, y.space, constant = numeric(0), density.gam = NULL, dsm = NULL, formula = NULL){
   if(!is.null(constant)){
     if(length(region.obj@strata.name) > 0 & length(constant) != length(region.obj@strata.name)){
-      message("Error: the length of the constant vector does not correspond to the number of strata")
+      stop("The length of the constant vector does not correspond to the number of strata", call. = FALSE)
     }
   }
   density <- new(Class = "Density", region = region.obj, strata.name = region.obj@strata.name, density.surface = density.surface, x.space = x.space, y.space = y.space, constant = constant, density.gam = density.gam, jit = 1)
@@ -260,8 +267,7 @@ make.ddf.analysis.list <- function(dsmodel, mrmodel = NULL, method, criteria = "
       ddf.analyses[[a]] <- new(Class = "DS.Analysis", dsmodel = dsmodel[[a]], criteria = criteria, truncation = truncation, binned.data = binned.data, cutpoints = cutpoints)
     }
   }else{
-    message("Double observer methods are not yet implemented")
-    return(NULL)
+    stop("Double observer methods are not yet implemented", call. = FALSE)
   }
   return(ddf.analyses)
 }
@@ -306,7 +312,6 @@ make.ddf.analysis.list <- function(dsmodel, mrmodel = NULL, method, criteria = "
 #'  design.details = c("Parallel","Systematic"), region = region, 
 #'  design.axis = 0, spacing = 100, plus.sampling =FALSE, 
 #'  path = shapefile.pathway)
-#' }
 #' 
 #' pop.density <- make.density(region.obj = region, x.space = 10, 
 #'  y.space = 10, constant = 0.5) 
@@ -330,7 +335,6 @@ make.ddf.analysis.list <- function(dsmodel, mrmodel = NULL, method, criteria = "
 #'  formula = ~1),~cds(key = "hr", formula = ~1)), method = "ds", 
 #'  criteria = "AIC")
 #' 
-#' \dontrun{
 #' my.simulation <- make.simulation(reps = 10, single.transect.set = TRUE,
 #'  region.obj = region, design.obj = parallel.design, 
 #'  population.description.obj = pop.description, 

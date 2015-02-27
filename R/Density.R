@@ -1,4 +1,4 @@
-#' @include generic.functions.R
+ #' @include generic.functions.R
 NULL
 
 #' Class "Density" 
@@ -147,64 +147,132 @@ setMethod("add.hotspot","Density",
 
 #' @rdname Density-class
 #' @aliases plot,Density-method
-setMethod("plot","Density",
-  function(x, y, add = FALSE, plot.units = character(0), ...){
+setMethod(
+  f = "plot",
+  signature = "Density",
+  definition = function(x, y, add = FALSE, plot.units = character(0), contours = TRUE, style = "points", density.col = heat.colors(12), ...){
+    #Check a valid style has been requested
+    if(!style %in% c("points", "blocks")){
+      stop("You have requested an unsupported plot style", call. = FALSE)
+    }
     density.surface <- x@density.surface
     #Get all the x, y and density values across strata
     densities <- x.vals <- y.vals <- NULL
+    full.density.grid <- data.frame(x = NULL, y = NULL, density = NULL)
     for(strat in seq(along = density.surface)){
+      full.density.grid <- rbind(full.density.grid, density.surface[[strat]])
       densities <- c(densities, density.surface[[strat]]$density)
       x.vals <- c(x.vals, density.surface[[strat]]$x)
       y.vals <- c(y.vals, density.surface[[strat]]$y)
     }
-    #Find the range of densities
-    zlim <- range(densities) 
-    #If the range < 1
-    if(zlim[2] - zlim[1] < 1){
-      #Multiply them by (1/minimum density)*10
-      multiplier <- (1/zlim[1])*10
-    }else{
-      #otherwise no scaling
-      multiplier <- 1
-    }
-    #Create the colour lookup
-    zlim <- range(densities*multiplier)
-    zlen <- zlim[2] - zlim[1] + 1
-    colorlut <- heat.colors(zlen) 
-    colorlut <- colorlut[length(colorlut):1]
-    #Set up plot
     if(length(plot.units) == 0){
       plot.units <- x@units
     }
-    if(!add){
-      xlabel <- paste("X-coords (",plot.units[1],")", sep = "")
-      ylabel <- paste("Y-coords (",plot.units[1],")", sep = "")
-      plot(range(x.vals), range(y.vals), col = "white", xlab = xlabel, ylab = ylabel, main = x@region.name, yaxt = "n", xaxt = "n", ...)
-      xticks <- axTicks(1)
-      yticks <- axTicks(2)
-      #Set up axes
-      if(plot.units != x@units){
-        #convert units
-        if(x@units == "m" & plot.units == "km"){ 
-          axis(1, at = xticks, labels = xticks/1000)
-          axis(2, at = yticks, labels = yticks/1000)
-        }else if(x@units == "km" & plot.units == "m"){
-          axis(1, at = xticks, labels = xticks*1000)
-          axis(2, at = yticks, labels = yticks*1000)
-        }else{
-          message("The requested conversion of units is not currently supported.")
+    xlabel <- paste("X-coords (",plot.units[1],")", sep = "")
+    ylabel <- paste("Y-coords (",plot.units[1],")", sep = "")
+    
+    if(contours | style == "blocks"){
+      #Sort the x and y values
+      x.vals <- sort(unique(x.vals))
+      y.vals <- sort(unique(y.vals))
+      z.matrix <- matrix(rep(NA, length(x.vals)*length(y.vals)), ncol = length(y.vals))
+      #Fill in the z matrix
+      for(ix in seq(along = x.vals)){
+        for(iy in seq(along = y.vals)){
+          #find densities
+          index <- which(full.density.grid$x == x.vals[ix] & full.density.grid$y == y.vals[iy])
+          #use the first one incase there is over lap with strata buffers
+          #Could do with being made prettier!
+          #Could average them?
+          z.matrix[ix,iy] <- full.density.grid$density[index[1]]
+        }
+      }  
+    }
+    #If all z values are equal turn contours off
+    if(nrow(unique(z.matrix)) == 1 & nrow(unique(t(z.matrix))) == 1){
+      contours = FALSE
+    }
+    #Check to see if the units of the z-matrix need converting
+    if(plot.units != x@units){
+      #convert units
+      if(x@units == "m" & plot.units == "km"){ 
+        if(contours){
+          z.matrix <- z.matrix * 1000000  
+        }
+      }else if(x@units == "km" & plot.units == "m"){
+        if(contours){
+          z.matrix <- z.matrix/1000000
         }
       }else{
-        #no unit conversion needed
-        axis(1, at = xticks, labels = xticks)
-        axis(2, at = yticks, labels = yticks)
+        warning("The requested conversion of units is not currently supported, this option will be ignored.", call. = FALSE, immediate. = TRUE)
       }
     }
-    #Add the points for each strata
-    for(strat in seq(along = density.surface)){
-      col <- colorlut[density.surface[[strat]]$density*multiplier-zlim[1]+1]
-      points(density.surface[[strat]]$x, density.surface[[strat]]$y, col = col, pch = 20)
-    }      
+    #If a contour plot is requested
+    if(style == "blocks"){
+      #Create the image
+      image(x.vals, y.vals, z.matrix, yaxt = "n", xaxt = "n", xlab = xlabel, ylab = ylabel, main = x@region.name, col = density.col)
+      if(contours){
+        contour(x.vals, y.vals, z.matrix, add = TRUE, ...)  
+      }
+    #OLD STLYE PLOTTING
+    }else{
+#       #If the range < 1
+#       if(zlim[2] - zlim[1] < 1){
+#         #Multiply them by (1/minimum density)*10
+#         multiplier <- (1/zlim[1])*10
+#       }else{
+#         #otherwise no scaling
+#         multiplier <- 1
+#       }
+#       #Create the colour lookup
+#       zlim <- range(densities*multiplier)
+#       zlen <- zlim[2] - zlim[1] + 1
+#       colorlut <- heat.colors(zlen) 
+#       colorlut <- colorlut[length(colorlut):1]
+      #Set up plot
+      if(!add){
+        plot(range(x.vals), range(y.vals), col = "white", xlab = xlabel, ylab = ylabel, main = x@region.name, yaxt = "n", xaxt = "n")
+      }
+      #Add the points for each strata
+      for(strat in seq(along = density.surface)){
+        #col <- colorlut[density.surface[[strat]]$density*multiplier-zlim[1]+1]
+        strat.density <- density.surface[[strat]]$density
+        #Find the range of densities
+        zlim <- range(strat.density) 
+        #Find the break points
+        breaks <- seq(zlim[1], zlim[2], length = length(density.col)+1)
+        #Set up a vector for the colours
+        colours <- rep(NA, length = length(strat.density))
+        #Fill in colours
+        for(i in seq(along = density.col)){
+          colours <- ifelse(strat.density >= breaks[i] & strat.density <= breaks[i+1], density.col[i], colours)
+        }
+        points(density.surface[[strat]]$x, density.surface[[strat]]$y, col = colours, pch = 20)
+      }
+      if(contours){
+        contour(x.vals, y.vals, z.matrix, add = TRUE, ...)  
+      }
+    }
+    #Now add the tick marks to the axese
+    xticks <- axTicks(1)
+    yticks <- axTicks(2)
+    #Set up axes
+    if(plot.units != x@units){
+      #convert units
+      if(x@units == "m" & plot.units == "km"){ 
+        axis(1, at = xticks, labels = xticks/1000)
+        axis(2, at = yticks, labels = yticks/1000)
+      }else if(x@units == "km" & plot.units == "m"){
+        axis(1, at = xticks, labels = xticks*1000)
+        axis(2, at = yticks, labels = yticks*1000)
+      }else{
+        warning("The requested conversion of units is not currently supported, this option will be ignored.", call. = FALSE, immediate. = TRUE)
+      }
+    }else{
+      #no unit conversion needed
+      axis(1, at = xticks, labels = xticks)
+      axis(2, at = yticks, labels = yticks)
+    }
   }
 )
 

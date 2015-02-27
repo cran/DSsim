@@ -7,8 +7,8 @@
 \alias{plot,Density-method}
 \title{Class "Density"}
 \usage{
-\S4method{plot}{Density,ANY}(x, y, add = FALSE, plot.units = character(0),
-  ...)
+\S4method{plot}{Density,ANY}(x, y, add = FALSE, plot.units = character(0), 
+contours = TRUE, style = "points", density.col = heat.colors(12), ...)
 }
 \arguments{
 \item{x}{the coordinates of points in the plot. Alternatively, a
@@ -19,13 +19,19 @@
     if \code{x} is an appropriate structure.}
     
 \item{add}{when implemented allows multiple object to be added
-    over the top of the existing plot}
+    over the top of the existing plot.}
   
 \item{plot.units}{allows the plot to have different units than 
-    the region or density object ('m' or 'km')}
+    the region or density object ('m' or 'km').}
+    
+\item{contours}{allows the user to add contours to the plot.}
+    
+\item{style}{character argument, either "points" or "blocks".}
+
+\item{density.col}{A vector of colours which will be used to represent different densities.}
 
 \item{...}{Arguments to be passed to methods, such as
-    \link{graphical parameters} (see \code{\link{par}}).
+    \link{contour} (see \code{\link{contour}}).
     Many methods will accept the following arguments:
     \describe{
     \item{\code{type}}{what type of plot should be drawn.  Possible types are
