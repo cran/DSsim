@@ -1,8 +1,4 @@
 #' @include Detectability.R
-#' 
-################################################################################
-# CONSTRUCT CLASS AND DEFINE INITIALIZE AND VALIDITY
-################################################################################
 
 #' Class "Population" 
 #' 
@@ -11,27 +7,22 @@
 #'
 #' @name Population-class
 #' @title S4 Class "Population"
-#' @docType class
-#' @section Slots: 
-#' \describe{
-#'  \item{\code{region.obj}}{Object of class \code{"character"}; the name of the region
-#'  object.}
-#'  \item{\code{strata.names}}{Object of class \code{"character"}; the names of the 
-#'  strata.}
-#'  \item{\code{N}}{Object of class \code{"numeric"}; the number of individuals/clusters.}
-#'  \item{\code{D}}{Object of class \code{"numeric"}; the density of individuals/clusters.}
-#'  \item{\code{population}}{Object of class \code{"data.frame"}; the locations of 
-#'  individuals/clusters and any population covariates.}
-#'  \item{\code{detectability}}{Object of class \code{"Detectability"}; describes how
-#'  easily the individuals/clusters can be detected.}
-#' }
+#' @slot region.obj Object of class \code{"character"}; the name of the region
+#'  object.
+#' @slot strata.names Object of class \code{"character"}; the names of the 
+#'  strata.
+#' @slot N Object of class \code{"numeric"}; the number of individuals/clusters.
+#' @slot D Object of class \code{"numeric"}; the density of individuals/clusters.
+#' @slot population  Object of class \code{"data.frame"}; the locations of 
+#'  individuals/clusters and any population covariates.
+#' @slot detectability  Object of class \code{"Detectability"}; describes how
+#'  easily the individuals/clusters can be detected.
 #' @section Methods:
 #' \describe{
 #'  \item{\code{plot}}{\code{signature=(object = "Line.Transect")}: plots the locations
 #'  of the individuals/clusters.}
 #' }
 #' @keywords classes
-#' @export
 #' @seealso \code{\link{make.population.description}}, \code{\link{make.detectability}}
 setClass("Population", representation(region.obj   = "character",
                                       strata.names = "character", 
@@ -62,16 +53,26 @@ setValidity("Population",
     return(TRUE)
   }
 )
-################################################################################
-# GENERIC METHODS
-################################################################################
-#' @rdname Population-class
-#' @aliases plot,Population-method
+
+# GENERIC METHODS DEFINITIONS --------------------------------------------
+
+#' Plot
+#' 
+#' Plots an S4 object of class 'Population'. Requires that the
+#' associated region has already been plotted. This function adds 
+#' the locations of the individuals/clusters in the population.
+#' 
+#' @param x object of class Population
+#' @param y not used
+#' @param ... other general plot parameters 
+#' @rdname plot.Population-methods
+#' @importFrom graphics points
+#' @exportMethod 
 setMethod(
   f="plot",
   signature="Population",
-  definition=function(x, y, type = "p"){
-    points(x@population$x, x@population$y, col = 2, pch = 20) 
+  definition=function(x, y, ...){
+    points(x@population$x, x@population$y, col = 2, pch = 20, ...) 
     invisible(x)
   }    
 ) 

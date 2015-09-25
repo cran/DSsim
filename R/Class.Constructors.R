@@ -1,23 +1,21 @@
-# @include Simulation.R
-# @include DS.Analysis.R
-# @include Population.Description.R
-# @include Density.R
-# @include LT.Systematic.Design.R
-# @include LT.Random.Design.R
-# @include LT.EqAngle.ZZ.Design.R
-# @include LT.EqSpace.ZZ.Design.R
-# @include LT.User.Specified.Design.R
-# @include Region.R
+#' @include Simulation.R
+#' @include DS.Analysis.R
+#' @include Population.Description.R
+#' @include Density.R
+#' @include LT.Systematic.Design.R
+#' @include LT.Random.Design.R
+#' @include LT.EqAngle.ZZ.Design.R
+#' @include LT.EqSpace.ZZ.Design.R
+#' @include LT.User.Specified.Design.R
+#' @include Region.R
 
 
-#' Creates a Region object
-#'
-#' This creates an instance of the Region class. If the user supplied a 
+#' @title Creates a Region object
+#' @description This creates an instance of the Region class. If the user supplied a 
 #' shapefile all information will be extracted from here. Otherwise the user
 #' needs to specify a list of polygons describing the areas of interest 
 #' (coords) and optionally a list of polygons describing the areas to 
 #' be excluded (gaps). If area is not specified it will be calculated.
-#' 
 #' @param region.name the region name
 #' @param strata.name the region name
 #' @param units the units given as a character (either 'm' or 'km')
@@ -45,9 +43,8 @@ make.region <- function(region.name, strata.name = character(0), units, area = n
   return(region)
 }
   
-#' Creates a Survey.Design object
-#'
-#' Currently surveys are only generated within the GIS in Distance. If you 
+#' @title  Creates a Survey.Design object
+#' @description Currently surveys are only generated within the GIS in Distance. If you 
 #' are running a simulation in R you will need to get Distance to 
 #' generate all the surveys as shapefiles in advance and supply the path to
 #' the directory which contains these shapefiles and only these shapefiles.
@@ -127,8 +124,8 @@ make.design <- function(transect.type, design.details, region.obj, design.axis =
   return(design)
 }
 
-#' Creates a Density object
-#' 
+#' @title Creates a Density object
+#' @description 
 #' The user has the option to create a grid describing the density of the 
 #' objects and pass this in giving the x and y spacings used in the creation
 #' of this grid. Alternatively the user can specify a constant density and x, 
@@ -181,8 +178,8 @@ make.density <- function(region.obj, density.surface = list(), x.space, y.space,
  return(density)
 }
 
-#' Creates a Population.Description object
-#' 
+#' @title Creates a Population.Description object
+#' @description 
 #' Creates an object which describes a population. The values in this object 
 #' will be used to create instances of the population
 #'
@@ -213,8 +210,8 @@ make.population.description <- make.pop.description <- function(region.obj, dens
   return(pop.description)
 }
 
-#' Creates a Detectablility object
-#' 
+#' @title Creates a Detectablility object
+#' @description 
 #' The detectability of the population is described by the values in this 
 #' class.
 #'
@@ -237,8 +234,8 @@ make.detectability <- function(key.function, scale.param, shape.param = numeric(
   return(detectability)
 }
 
-#' Creates a list of DDF.Analysis objects
-#' 
+#' @title Creates a list of DDF.Analysis objects
+#' @description 
 #' This method creates a list of DDF.Analysis objects each of which describes 
 #' a model to fit to the distance data. The simulation will fit each of these 
 #' models to the data generated in the simulation and select the model with 
@@ -248,6 +245,10 @@ make.detectability <- function(key.function, scale.param, shape.param = numeric(
 #' @param mrmodel not yet implemented
 #' @param method character only "ds" normal distance sampling currently implemented
 #' @param criteria character model selection criteria (AIC, AICc, BIC) - only AIC implemented at present.
+#' @param analysis.strata Dataframe with two columns ("design.id" and 
+#' "analysis.id"). The former gives the strata names as defined in the
+#' design (i.e. the region object) the second specifies how they should 
+#' be grouped (into less strata) for the analyses
 #' @param truncation numeric truncation distance for analyses
 #' @param binned.data logical whether the data should be analsed in bins
 #' @param cutpoints gives the cutpoints of the binned data
@@ -260,11 +261,11 @@ make.detectability <- function(key.function, scale.param, shape.param = numeric(
 #'  formula = ~1),~cds(key = "hr", formula = ~1)), method = "ds", 
 #'  criteria = "AIC")
 #'
-make.ddf.analysis.list <- function(dsmodel, mrmodel = NULL, method, criteria = "AIC", truncation = numeric(0), binned.data = FALSE, cutpoints = numeric(0)){
+make.ddf.analysis.list <- function(dsmodel, mrmodel = NULL, method, criteria = "AIC", analysis.strata = data.frame(), truncation = numeric(0), binned.data = FALSE, cutpoints = numeric(0)){
   ddf.analyses <- list()
   if(method == "ds"){
     for(a in seq(along = dsmodel)){
-      ddf.analyses[[a]] <- new(Class = "DS.Analysis", dsmodel = dsmodel[[a]], criteria = criteria, truncation = truncation, binned.data = binned.data, cutpoints = cutpoints)
+      ddf.analyses[[a]] <- new(Class = "DS.Analysis", dsmodel = dsmodel[[a]], criteria = criteria, analysis.strata, truncation = truncation, binned.data = binned.data, cutpoints = cutpoints)
     }
   }else{
     stop("Double observer methods are not yet implemented", call. = FALSE)
@@ -272,8 +273,8 @@ make.ddf.analysis.list <- function(dsmodel, mrmodel = NULL, method, criteria = "
   return(ddf.analyses)
 }
 
-#' Creates a Simulation object
-#' 
+#' @title Creates a Simulation object
+#' @description 
 #' This creates a simulation object which groups together all the objects 
 #' needed to complete the simulation. 
 #'
@@ -352,8 +353,20 @@ make.ddf.analysis.list <- function(dsmodel, mrmodel = NULL, method, criteria = "
 make.simulation <- function(reps, single.transect.set = FALSE, double.observer = FALSE, region.obj, design.obj, population.description.obj, detectability.obj, ddf.analyses.list){
   #Make the results arrays and store in a list
   no.strata <- ifelse(length(region.obj@strata.name) > 0, length(region.obj@strata.name)+1, 1) 
+  #Check to see if the strata are grouped in the analyses
+  new.strata.names <- NULL
+  if(nrow(ddf.analyses.list[[1]]@analysis.strata) > 0){
+    new.strata.names <- unique(ddf.analyses.list[[1]]@analysis.strata$analysis.id)  
+  }else{
+    new.strata.names <- NULL
+  }
   if(length(region.obj@strata.name) > 0){
-    strata.name <- c(sort(region.obj@strata.name), "Total")
+    if(!is.null(new.strata.names)){
+      strata.name <- c(sort(new.strata.names), "Total")
+      no.strata <- length(strata.name)
+    }else{
+      strata.name <- c(sort(region.obj@strata.name), "Total")  
+    }
   }else{
     strata.name <- region.obj@region.name
   }

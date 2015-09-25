@@ -1,4 +1,6 @@
+#' @importFrom stats runif
 generate.pop.N <- function(population.description, region.obj){
+#This function generates a Population based on a fixed population size
   N <- population.description@N
   density.obj <- population.description@density
   first = TRUE

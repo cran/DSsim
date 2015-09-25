@@ -14,7 +14,6 @@
 #'  \item{\code{show}}{\code{signature=(object = "Simulation.Summary")}: prints
 #'  the contents of the object in a user friendly format.}
 #'  }
-#' @export
 setClass("Simulation.Summary", representation(region.name = "character",
                                       total.reps = "numeric",
                                       failures = "numeric",
@@ -56,8 +55,13 @@ setValidity("Simulation.Summary",
 # GENERIC METHODS
 ################################################################################
 
-#' @rdname Simulation.Summary-class
-#' @aliases show,Simulation.Summary-method                                      
+#' show
+#' 
+#' Displays the simulation summary
+#' 
+#' @param object object of class Simulation.Summary
+#' @rdname show.Simulation.Summary-methods
+#' @export
 setMethod(
   f="show",   
   signature="Simulation.Summary",

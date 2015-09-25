@@ -6,11 +6,10 @@
 #'
 #' @name Obs.Table-class
 #' @title S4 Class "Obs.Table"
-#' @docType class
+#' @slot obs.table data.frame for dht
 #' @section Objects from the Class: Objects can be created by calls to the 
 #' function \code{create.survey.results(simulation, dht.table = TRUE)} 
 #' @keywords classes
-#' @export
 #' @seealso \code{\link{create.survey.results}}
 setClass(Class = "Obs.Table", representation(obs.table = "data.frame"))
 

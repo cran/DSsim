@@ -1,9 +1,5 @@
 #' @include LT.Survey.R
-#' @include generic.function.R
-
-################################################################################
-# CONSTRUCT CLASS AND DEFINE INITIALIZE AND VALIDITY
-################################################################################
+#' @include generic.functions.R
 
 #' Class "Single.Obs.LT.Survey" 
 #' 
@@ -12,10 +8,7 @@
 #'
 #' @name Single.Obs.LT.Survey-class
 #' @title S4 Class "Single.Obs.LT.Survey"
-#' @docType class
 #' @keywords classes         
-#' @export
-
 setClass(Class = "Single.Obs.LT.Survey",
          contains = "LT.Survey"
 )
@@ -25,11 +18,6 @@ setMethod(
   signature="Single.Obs.LT.Survey",
   definition=function(.Object, population, line.transect, perp.truncation){
     #Input pre-processing
-    #full.data <- calculate.distances(get(population), get(survey))
-    #dist.data <- simulate.detection(full.data, pop@detectability)
-    #Set slots
-    #.Object@distance.data <- dist.data
-    #.Object@full.data     <- full.data
     .Object@population    <- population
     .Object@line.transect <- line.transect
     .Object@perpendicular.truncation <- perp.truncation
@@ -45,13 +33,10 @@ setValidity("Single.Obs.LT.Survey",
   }
 )
 
-################################################################################
-# GENERIC METHODS
-################################################################################
-
+# GENERIC METHODS DEFINITIONS --------------------------------------------
 
 #' @rdname create.survey.results-methods
-#' @aliases create.survey.results,Single.Obs.LT.Survey-method
+#' @export
 setMethod(
   f="create.survey.results",
   signature="Single.Obs.LT.Survey",
@@ -78,17 +63,4 @@ setMethod(
 ) 
 
  
-
-
-
-
-
-
-
-
-
-   
-
-
-
 
