@@ -1,14 +1,18 @@
 #' @include Simulation.R
-#' @include DS.Analysis.R
+#' @include Region.R
 #' @include Population.Description.R
 #' @include Density.R
+#' @include Survey.Design.R
+#' @include PT.Design.R
+#' @include LT.Design.R
 #' @include LT.Systematic.Design.R
 #' @include LT.Random.Design.R
 #' @include LT.EqAngle.ZZ.Design.R
 #' @include LT.EqSpace.ZZ.Design.R
 #' @include LT.User.Specified.Design.R
-#' @include Region.R
-
+#' @include PT.Random.Design.R
+#' @include PT.Systematic.Design.R
+#' @include DS.Analysis.R
 
 #' @title Creates a Region object
 #' @description This creates an instance of the Region class. If the user supplied a 
@@ -20,7 +24,7 @@
 #' @param strata.name the region name
 #' @param units the units given as a character (either 'm' or 'km')
 #' @param area the area of the region (optional - if not supplied it will be 
-#'   calculated for you if you supply a shapefile)
+#'   calculated for you)
 #' @param shapefile a shapefile of the region
 #' @param coords list of polygons describing the areas of interest
 #' @param gaps list of polygons describing the areas to be excluded
@@ -103,9 +107,8 @@ make.design <- function(transect.type, design.details, region.obj, design.axis =
         if(design.details[2] %in% c("Equal Spaced", "ES", "equal spaced", "Equal spaced")){
           design <- new(Class = "LT.EqSpace.ZZ.Design", region = region, design.axis = design.axis, spacing = spacing, plus.sampling = plus.sampling, path = path)
         }
-        if(design.details[2] %in% c("Equal Angle", "equal angle", "Equal angle")){               #error in this no spacing only angle
-          stop("This design is not currently supported")
-          design <- new(Class = "LT.EqAngle.ZZ.Design", region = region, design.axis = design.axis, angle = angle, plus.sampling = plus.sampling, path = path)
+        if(design.details[2] %in% c("Equal Angle", "equal angle", "Equal angle")){            
+          design <- new(Class = "LT.EqAngle.ZZ.Design", region = region, design.axis = design.axis, spacing = numeric(0), plus.sampling = plus.sampling, path = path)
         }
       }
       if(design.details[1] %in% c("P", "Parallel", "parallel")){
@@ -116,6 +119,16 @@ make.design <- function(transect.type, design.details, region.obj, design.axis =
           design <- new(Class = "LT.Systematic.Design", region = region, design.axis = design.axis, spacing = spacing, plus.sampling = plus.sampling, path = path)
         }
       }
+    }
+  }else if(transect.type %in% c("Point", "point", "Point Transect", "point transect")){
+    if(length(design.details) > 1){
+      warning("Only one design details option required for point transects, subsequent options will be ignored.")
+    }
+    if(design.details[1] %in% c("Systematic", "systematic")){
+      design <- new(Class = "PT.Systematic.Design", region = region, design.axis = design.axis, spacing = spacing, plus.sampling = plus.sampling, path = path)  
+    }
+    if(design.details[1] %in% c("Random", "random")){
+      design <- new(Class = "PT.Random.Design", region = region, design.axis = design.axis, spacing = spacing, plus.sampling = plus.sampling, path = path)
     }
   }
   if(is.null(design)){
@@ -373,7 +386,7 @@ make.simulation <- function(reps, single.transect.set = FALSE, double.observer =
   individuals <- list(summary = array(NA, dim = c(no.strata, 7, reps+2), dimnames = list(strata.name, c("Area", "CoveredArea", "Effort", "n", "ER", "se.ER", "cv.ER"), c(1:reps,"mean","sd"))), 
                   N = array(NA, dim = c(no.strata, 6, reps+2), dimnames = list(strata.name, c("Estimate", "se", "cv", "lcl", "ucl", "df"), c(1:reps,"mean","sd"))), 
                   D = array(NA, dim = c(no.strata, 6, reps+2), dimnames = list(strata.name, c("Estimate", "se", "cv", "lcl", "ucl", "df"), c(1:reps,"mean", "sd"))))
-  detection = array(NA, dim = c(1, 4, reps+2), dimnames = list("Pooled", c("True.Pa", "Pa", "ESW", "f(0)"), c(1:reps,"mean","sd")))
+  detection = array(NA, dim = c(1, 6, reps+2), dimnames = list("Pooled", c("True.Pa", "Pa", "ESW", "f(0)", "SelectedModel", "DeltaCriteria"), c(1:reps,"mean","sd")))
   #create additional arrays if animals are in clusters
   if(population.description.obj@size){
     clusters <- list(summary = array(NA, dim = c(no.strata, 8, reps+2), dimnames = list(strata.name, c("Area", "CoveredArea", "Effort", "n", "k", "ER", "se.ER", "cv.ER"), c(1:reps,"mean","sd"))), 

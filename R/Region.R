@@ -1,8 +1,8 @@
 #' @include generic.functions.R
 
-#' Class "Region" 
+#' @title  Class "Region" 
 #' 
-#' Class \code{"Region"} is an S4 class containing descriptions of the 
+#' @description Class \code{"Region"} is an S4 class containing descriptions of the 
 #' study area. The polygons describing the region are found in the 
 #' coords slot and any gaps are described as polygons in the gaps slot.
 #'
@@ -63,7 +63,7 @@ setMethod(
       gaps <- polygons$gaps  
     }else if(length(coords) == 0 & is.null(shapefile)){
       #complains if neither the coordinates or the shapefile are supplied
-      stop("You must provide either coordinates or a shapefile", call. = FALSE)
+      stop("You must provide either coordinates or a shapefile.", call. = FALSE)
     }
     #Gets the minimum bounding box
     boundbox <- get.bound.box(coords)

@@ -2,9 +2,9 @@
 #' @include DDF.Data.R
 
 
-#' Class "DDF.Analysis" 
+#' @title Class "DDF.Analysis" 
 #' 
-#' Class \code{"DDF.Analysis"} is an S4 class describing a detection function
+#' @description Class \code{"DDF.Analysis"} is an S4 class describing a detection function
 #' which is to be fitted to the data.
 #'
 #' @name DDF.Analysis-class
@@ -46,9 +46,9 @@ setMethod(
   f="initialize",
   signature="DDF.Analysis",
   definition=function(.Object, dsmodel = call(), criteria, analysis.strata, truncation, binned.data, cutpoints){
-    if(criteria %in% c("aic", "AIC")){
+    if(criteria %in% c("aic", "AIC", "bic", "BIC", "AICc")){
     }else{
-      warning("This selection criteria is not currently supported, it will be changed to AIC", call. = FALSE, immediate. = TRUE)
+      warning("This selection criteria is not currently supported (please select from 'AIC', 'BIC' or 'AICc'), the simulation is automatically changing it to AIC for this call", call. = FALSE, immediate. = TRUE)
       criteria = "AIC"
     }
     .Object@dsmodel <- dsmodel
@@ -76,11 +76,12 @@ setValidity("DDF.Analysis",
 # GENERIC METHODS DEFINITIONS --------------------------------------------
  
 #' @rdname run.analysis-methods
+#' @param point logical indicating whether it is a point transect survey
 #' @export
 setMethod(
   f="run.analysis",
   signature=c("DDF.Analysis","DDF.Data"),
-  definition=function(object, data, dht = FALSE){
+  definition=function(object, data, dht = FALSE, point = FALSE){
     dist.data <- data@ddf.dat
     if(object@binned.data){
       #binned data
@@ -89,7 +90,11 @@ setMethod(
       #Make sure error messages are surpressed
       options(show.error.messages = FALSE)
       #Try to fit ddf model
-      ddf.result <- try(eval(parse(text = paste("ddf(dsmodel = ~", as.character(object@dsmodel)[2] ,", data = dist.data, method = 'ds', meta.data = list(width = ", max(object@cutpoints), ", binned = TRUE, breaks = ", object@cutpoints ,"))", sep = ""))), silent = TRUE)
+      if(point){
+        ddf.result <- try(eval(parse(text = paste("ddf(dsmodel = ~", as.character(object@dsmodel)[2] ,", data = dist.data, method = 'ds', meta.data = list(width = ", max(object@cutpoints), ", point = TRUE, binned = TRUE, breaks = ", object@cutpoints ,"))", sep = ""))), silent = TRUE)
+      }else{
+        ddf.result <- try(eval(parse(text = paste("ddf(dsmodel = ~", as.character(object@dsmodel)[2] ,", data = dist.data, method = 'ds', meta.data = list(width = ", max(object@cutpoints), ", binned = TRUE, breaks = ", object@cutpoints ,"))", sep = ""))), silent = TRUE)
+      }
       options(show.error.messages = TRUE)
       #Check if it was successful
       if(any(class(ddf.result) == "try-error")){
@@ -108,12 +113,21 @@ setMethod(
         #Make sure error messages are surpressed
         options(show.error.messages = FALSE)
         #Try to fit ddf model
-        ddf.result <- try(eval(parse(text = paste("ddf(dsmodel = ~", as.character(object@dsmodel)[2] ,", data = dist.data, method = 'ds')", sep = ""))), silent = TRUE)
+        if(point){
+          ddf.result <- try(eval(parse(text = paste("ddf(dsmodel = ~", as.character(object@dsmodel)[2] ,", data = dist.data, method = 'ds', meta.data = list(point = TRUE))", sep = ""))), silent = TRUE)
+        }else{
+          ddf.result <- try(eval(parse(text = paste("ddf(dsmodel = ~", as.character(object@dsmodel)[2] ,", data = dist.data, method = 'ds')", sep = ""))), silent = TRUE)
+        }
+        
         options(show.error.messages = TRUE)
       }else{
         #If there is a truncation distance 
         options(show.error.messages = FALSE)
-        ddf.result <- try(eval(parse(text = paste("ddf(dsmodel = ~", as.character(object@dsmodel)[2] ,", data = dist.data, method = 'ds', meta.data = list(width = ", object@truncation,"))", sep = ""))), silent = TRUE)
+        if(point){
+          ddf.result <- try(eval(parse(text = paste("ddf(dsmodel = ~", as.character(object@dsmodel)[2] ,", data = dist.data, method = 'ds', meta.data = list(point = TRUE, width = ", object@truncation,"))", sep = ""))), silent = TRUE)
+        }else{
+          ddf.result <- try(eval(parse(text = paste("ddf(dsmodel = ~", as.character(object@dsmodel)[2] ,", data = dist.data, method = 'ds', meta.data = list(width = ", object@truncation,"))", sep = ""))), silent = TRUE)
+        }
         options(show.error.messages = TRUE)
       }
       #check if there was an error

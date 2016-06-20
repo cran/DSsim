@@ -21,7 +21,12 @@
 #' @keywords classes
 #' @seealso \code{\link{make.density}}
 #' @export
-setClass("Density", representation(region.name = "character", strata.name = "character", density.surface = "list", x.space = "numeric", y.space = "numeric", units = "character"))
+setClass("Density", representation(region.name = "character", 
+                                   strata.name = "character", 
+                                   density.surface = "list", 
+                                   x.space = "numeric", 
+                                   y.space = "numeric", 
+                                   units = "character"))
 
 setMethod(
   f="initialize",
@@ -149,7 +154,10 @@ setMethod(
     #Create plot axes labels
     xlabel <- paste("X-coords (",plot.units[1],")", sep = "")
     ylabel <- paste("Y-coords (",plot.units[1],")", sep = "")
-    
+    #If all z values are equal turn contours off
+    if(length(unique(densities)) == 1){
+      contours = FALSE
+    }
     if(contours | style == "blocks"){
       #Sort the x and y values
       x.vals <- sort(unique(x.vals))
@@ -164,10 +172,6 @@ setMethod(
           z.matrix[ix,iy] <- full.density.grid$density[index[1]]
         }
       }  
-    }
-    #If all z values are equal turn contours off
-    if(nrow(unique(z.matrix)) == 1 & nrow(unique(t(z.matrix))) == 1){
-      contours = FALSE
     }
     #Check to see if the units of the z-matrix need converting
     if(plot.units != x@units){
@@ -210,14 +214,15 @@ setMethod(
       if(!add){
         plot(range(x.vals), range(y.vals), col = "white", xlab = xlabel, ylab = ylabel, main = x@region.name, yaxt = "n", xaxt = "n")
       }
+      #Find the range of densities
+      #zlim <- range(strat.density) 
+      zlim <- range(densities) 
+      #Find the break points
+      breaks <- seq(zlim[1], zlim[2], length = length(density.col)+1)
       #Add the points for each strata
       for(strat in seq(along = density.surface)){
         #col <- colorlut[density.surface[[strat]]$density*multiplier-zlim[1]+1]
         strat.density <- density.surface[[strat]]$density
-        #Find the range of densities
-        zlim <- range(strat.density) 
-        #Find the break points
-        breaks <- seq(zlim[1], zlim[2], length = length(density.col)+1)
         #Set up a vector for the colours
         colours <- rep(NA, length = length(strat.density))
         #Fill in colours

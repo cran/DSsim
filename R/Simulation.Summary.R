@@ -1,6 +1,6 @@
-#' Class "Simulation.Summary" 
+#' @title Class "Simulation.Summary" 
 #' 
-#' Class \code{"Simulation.Summary"} is an S4 class containing a summary of
+#' @description Class \code{"Simulation.Summary"} is an S4 class containing a summary of
 #' the simulation results. This is returned when \code{summary(Simulation)}
 #' is called. If it is not assigned to a variable the object will be 
 #' displayed via the \code{show} method. 
@@ -21,6 +21,10 @@ setClass("Simulation.Summary", representation(region.name = "character",
                                       clusters = "list",
                                       expected.size = "data.frame", 
                                       detection = "data.frame",
+                                      model.selection = "table",
+                                      design.summary = "Design.Summary",
+                                      detectability.summary = "list",
+                                      analysis.summary = "list",
                                       include.glossary = "logical"))
                                       
 
@@ -28,15 +32,19 @@ setClass("Simulation.Summary", representation(region.name = "character",
 setMethod(
   f="initialize",   
   signature="Simulation.Summary",
-  definition=function(.Object, region.name, total.reps, failures, individuals, clusters = list(), expected.size = data.frame(NULL), detection, include.glossary = FALSE){
+  definition=function(.Object, region.name, total.reps, failures, individuals, clusters = list(), expected.size = data.frame(NULL), detection, model.selection, design.summary = list(), detectability.summary = list(), analysis.summary = list(), include.glossary = FALSE){
     #Set slots
-    .Object@region.name   <- region.name
-    .Object@total.reps    <- total.reps
-    .Object@failures      <- failures
-    .Object@individuals   <- individuals    
-    .Object@clusters      <- clusters
-    .Object@expected.size <- expected.size
-    .Object@detection     <- detection
+    .Object@region.name     <- region.name
+    .Object@total.reps      <- total.reps
+    .Object@failures        <- failures
+    .Object@individuals     <- individuals    
+    .Object@clusters        <- clusters
+    .Object@expected.size   <- expected.size
+    .Object@detection       <- detection
+    .Object@model.selection <- model.selection
+    .Object@design.summary  <- design.summary
+    .Object@detectability.summary <- detectability.summary
+    .Object@analysis.summary <- analysis.summary
     .Object@include.glossary <- include.glossary
     #Check object is valid
     validObject(.Object)
@@ -69,8 +77,30 @@ setMethod(
     #Display summaries
     cat("\nRegion: ", object@region.name) 
     cat("\nNo. Repetitions: ", object@total.reps)
-    cat("\nNo. Failures: ", object@failures)
-    cat("\n\nSummary for Individuals")      
+    cat("\nNo. Failures: ", object@failures, fill = TRUE)
+    show(object@design.summary)
+    cat("\nPopulation Detectability Summary:", fill = TRUE)
+    for(i in seq(along = object@detectability.summary)){
+      if(length(object@detectability.summary[[i]]) > 0){
+        cat("   ",names(object@detectability.summary)[i], " = ", object@detectability.summary[[i]], fill = TRUE)  
+      }
+    }
+    cat("\nAnalysis Summary:")  
+    for(i in seq(along = object@analysis.summary)){
+      if(i == 1){
+        cat("\n   Candidate Models:", fill = TRUE)
+        for(j in seq(along = object@analysis.summary[[1]])){
+          no.times.selected <- object@model.selection[names(object@model.selection) == as.character(j)]
+          if(length(no.times.selected) == 0){
+            no.times.selected <- 0
+          }
+          cat("      Model ", j, ": ", as.character(object@analysis.summary[[1]][[j]]), " was selected ", no.times.selected, " time(s).", fill = TRUE)
+        }
+      }else{
+        cat("  ",names(object@analysis.summary)[i], " = ", object@analysis.summary[[i]], fill = TRUE)
+      }
+    }
+    cat("\nSummary for Individuals")      
     cat("\n\nSummary Statistics\n\n")
     print(object@individuals$summary)
     cat("\n     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")

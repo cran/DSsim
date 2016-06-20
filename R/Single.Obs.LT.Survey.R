@@ -1,9 +1,9 @@
 #' @include LT.Survey.R
 #' @include generic.functions.R
 
-#' Class "Single.Obs.LT.Survey" 
+#' @title Class "Single.Obs.LT.Survey" 
 #' 
-#' An S4 class containing an instance of a population
+#' @description An S4 class containing an instance of a population
 #' and a set of transects. 
 #'
 #' @name Single.Obs.LT.Survey-class
@@ -19,7 +19,7 @@ setMethod(
   definition=function(.Object, population, line.transect, perp.truncation){
     #Input pre-processing
     .Object@population    <- population
-    .Object@line.transect <- line.transect
+    .Object@transect      <- line.transect
     .Object@perpendicular.truncation <- perp.truncation
     #Check object is valid
     validObject(.Object)
@@ -42,8 +42,12 @@ setMethod(
   signature="Single.Obs.LT.Survey",
   definition=function(object, dht.tables = FALSE, ...){
     population <- object@population
-    line.transect <- object@line.transect
-    poss.distances <- calc.poss.detect.dists(population, line.transect, perp.truncation = object@perpendicular.truncation)
+    line.transect <- try(object@transect, silent = TRUE)
+    #Check for backwards compatability
+    if(class(line.transect) == "try-error"){
+      line.transect <- object@line.transect
+    }
+    poss.distances <- calc.poss.detect.dists.lines(population, line.transect, perp.truncation = object@perpendicular.truncation)
     n.in.covered <- poss.distances$distance
     dist.data <- simulate.detections(poss.distances, population@detectability)
     dist.data <- rename.duplicates(dist.data)

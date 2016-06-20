@@ -1,4 +1,4 @@
-get.sampler.info <- function(shapefile, region.obj, meta = NULL){
+get.line.sampler.info <- function(shapefile, region.obj, meta = NULL){
 #Extracts the transect corrdinates and other information from the survey
 #shapefiles
   ID <- start.X <- start.Y <- end.X <- end.Y <- tot.length <- d7.length <- region <- NULL
@@ -20,22 +20,27 @@ get.sampler.info <- function(shapefile, region.obj, meta = NULL){
     region     <- c(region, rep(region.obj@region.name, segs))
   }
   
-  #xtract strata transect info from meta
-  if(!is.null(meta) & length(region.obj@strata.name) > 0){
-    for(i in seq(along = ID)){
-      if(length(meta[,1][meta[,2] == ID[i]]) > 0){
-        region[i] <- meta[,3][meta[,2] == ID[i]]
-        #d7.length[i] <- meta[,4][meta[,2] == ID[i]]
+  #If there are multiple strata
+  if(length(region.obj@strata.name) > 0){
+    if(!is.null(shapefile$dbf$dbf$Stratum)){
+      #If there is information in the shapefile use that  
+      strata.ID <- shapefile$dbf$dbf$Stratum[ID]
+      strata.names <- region.obj@strata.name[strata.ID]
+    }else if(!is.null(meta)){
+      #Otherwise if there is information in the file meta.txt use that
+      for(i in seq(along = ID)){
+        if(length(meta[,1][meta[,2] == ID[i]]) > 0){
+          region[i] <- meta[,3][meta[,2] == ID[i]]
+          #d7.length[i] <- meta[,4][meta[,2] == ID[i]]
+        }
       }
-    }
-    #This should be coded into VB at some point
-    region.names <- region.obj@strata.name[as.numeric(region)]
-    sampler.info <- data.frame(ID = ID, start.X = start.X, start.Y = start.Y, end.X = end.X, end.Y = end.Y, length = tot.length, region = region.names, d7.length = d7.length)
-  }else{
-    #Get strata names for each transect - checks that both endpoints and mid point agree
-    #*** Note: in plus sampling transect ends or some points will fall outside the strata polygons
-    #ONLY USED IF THERE ARE MORE THAN ONE STRATA
-    if(length(region.obj@strata.name) > 0){             
+      #This should be coded into VB at some point
+      strata.names <- region.obj@strata.name[as.numeric(region)]
+    }else{
+      #As a last resort...
+      #Get strata names for each transect - checks that both endpoints and mid point agree
+      #*** Note: in plus sampling transect ends or some points will fall outside the strata polygons
+      #ONLY USED IF THERE ARE MORE THAN ONE STRATA
       start.point.coords <- data.frame(x = start.X, y = start.Y)
       end.point.coords <- data.frame(x = end.X, y = end.Y)
       mid.point.coords <- data.frame(x = (end.X + start.X)/2, y = (end.Y + start.Y)/2)
@@ -49,14 +54,15 @@ get.sampler.info <- function(shapefile, region.obj, meta = NULL){
         strata.id <- ifelse(strata.temp == 3, strat, strata.id)   
       }
       if(length(which(is.na(strata.id))) > 0){
-       warning("Transect cannot be allocated to strata debug get.sampler.info (possible that part of a transect falls outwith study region)", call. = FALSE, immediate. = TRUE)
+       warning("Transect cannot be allocated to strata debug get.line.sampler.info (possible that part of a transect falls outwith study region)", call. = FALSE, immediate. = TRUE)
       return(NULL)
       }
-      sampler.info <- data.frame(ID = ID, start.X = start.X, start.Y = start.Y, end.X = end.X, end.Y = end.Y, length = tot.length, region = region.obj@strata.name[strata.id], d7.length = d7.length)
-    }else{
-      #If there is only one strata all transect must be in that strata
-      sampler.info <- data.frame(ID = ID, start.X = start.X, start.Y = start.Y, end.X = end.X, end.Y = end.Y, length = tot.length, region = region, d7.length = d7.length)
+      strata.names <- region.obj@strata.name[strata.id]
     }
+    sampler.info <- data.frame(ID = ID, start.X = start.X, start.Y = start.Y, end.X = end.X, end.Y = end.Y, length = tot.length, region = strata.names, d7.length = d7.length)
+  }else{
+    #If there is only one strata all transect must be in that strata
+    sampler.info <- data.frame(ID = ID, start.X = start.X, start.Y = start.Y, end.X = end.X, end.Y = end.Y, length = tot.length, region = region, d7.length = d7.length)
   }
   return(sampler.info)
 }
