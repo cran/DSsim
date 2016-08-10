@@ -1,9 +1,9 @@
-c7cf22baf598af6273b460a1a437cc83 *DESCRIPTION
+99952bc857ed43848712ff2e7ab98896 *DESCRIPTION
 4940a0a49a9e9be9f7fa85a26abdd281 *NAMESPACE
 60fac59ce56f87dc4463181c84f1efd6 *NEWS
 81b4abde00cb58de804d456a799a40b2 *R/Class.Constructors.R
 5dbc5045d1a243f1ca220c01ddac697d *R/DDF.Analysis.R
-dba2a6a4024714da0e748277c0d83431 *R/DDF.Data.R
+29e55247c4e7219dd8e3e5648e4dc4f6 *R/DDF.Data.R
 2b308da5defff0dafc9a79799c7624c2 *R/DS.Analysis.R
 92af5ebc9d5cbfe6624664cd8de5bc91 *R/DSM.Analysis.R
 bbc91d759c3a1eff64f611cd12a780fe *R/Density.R
@@ -30,7 +30,7 @@ ddbf8fa99b4fe24b4ffccb95ab81cbb8 *R/Population.R
 c21cfd711062a340e93a16e965d480e8 *R/Region.R
 f27cac38e000fed842be212553b20155 *R/Region.Table.R
 98dd41092b840d98654e0d3c3b9d9ffd *R/Sample.Table.R
-fa2b5d42350d7ef92509a749176f6327 *R/Simulation.R
+bdcd27ff2f8112bad5b4a13e9e2337a7 *R/Simulation.R
 3fdb5ef1f79b25422707efdf7f3fa090 *R/Simulation.Summary.R
 21df786e5d2a3bbc741197b5403cd355 *R/Single.Obs.DDF.Data.R
 7dca014058509cf86211bfe0c836f812 *R/Single.Obs.LT.Survey.R
@@ -75,7 +75,7 @@ cee601fbcea00b8d1259766bb9267d39 *R/store.dht.results.R
 38fde9c7973ef634a1e8cacbb7c8b199 *R/uf.detect.R
 c6df361e7c3d2571bb78a8c7c2e5b0db *data/transects.shp.rda
 98a56e6d8084632b6c2c7b9d6bdfbce4 *man/DDF.Analysis-class.Rd
-42f3e7f54ba1eb7539373a9c85c77223 *man/DDF.Data-class.Rd
+efa620d5351fcf3e4f8a770ab74e2629 *man/DDF.Data-class.Rd
 90d816590f9dd92fd63c1c3d586334c3 *man/Density-class.Rd
 876c1b01ddf90e8c54d54c66df4f66bc *man/Design.Summary-class.Rd
 2145c7fe5e1c453d2ba2da9bf8d72bbf *man/Detectability-class.Rd
