@@ -3,24 +3,22 @@ Depends: graphics, splancs, mrds, mgcv, shapefiles, methods
 Suggests: testthat, parallel
 Type: Package
 Title: Distance Sampling Simulations
-Version: 1.0.6
-Date: 2016-08-10
+Version: 1.0.7
 LazyLoad: yes
 Author: Laura Marshall <lhm@st-and.ac.uk>
 Maintainer: Laura Marshall <lhm@st-and.ac.uk>
-Description: Performs distance sampling simulations. It repeatedly
-    generates instances of a user defined population within a given survey
-    region, generates realisations of a survey design (currently these must
-    be generated using Distance software in advance <http://distancesampling.org/>) 
-    and simulates the detection process. The data are then analysed
-    so that the results can be compared for accuracy and precision
-    across all replications. This will allow users to select survey
-    designs which will give them the best accuracy and precision
-    given their expectations about population distribution. Any uncertainty in
-    population distribution or population parameters can be included by running
-    the different survey designs for a number of different population
-    descriptions. An example simulation can be found in the help file
-    for make.simulation.
+Description: Performs distance sampling simulations. It repeatedly generates
+    instances of a user defined population within a given survey region, generates
+    realisations of a survey design (currently these must be generated using
+    Distance software in advance <http://distancesampling.org/>) and simulates
+    the detection process. The data are then analysed so that the results can
+    be compared for accuracy and precision across all replications. This will
+    allow users to select survey designs which will give them the best accuracy
+    and precision given their expectations about population distribution. Any
+    uncertainty in population distribution or population parameters can be
+    included by running the different survey designs for a number of different
+    population descriptions. An example simulation can be found in the help file for
+    make.simulation.
 License: GPL (>= 2)
 Collate: 'generic.functions.R' 'DDF.Data.R' 'DDF.Analysis.R'
         'DS.Analysis.R' 'Survey.Design.R' 'PT.Design.R'
@@ -32,8 +30,9 @@ Collate: 'generic.functions.R' 'DDF.Data.R' 'DDF.Analysis.R'
         'Single.Obs.DDF.Data.R' 'Transect.R' 'Line.Transect.R'
         'Detectability.R' 'Population.R' 'LT.Survey.Results.R'
         'Survey.Results.R' 'DSM.Analysis.R' 'Simulation.R'
-        'Class.Constructors.R' 'Design.Summary.R' 'Survey.R'
-        'LT.Survey.R' 'Point.Transect.R' 'PT.Survey.R'
+        'Class.Constructors.R' 'Design.Summary.R'
+        'LT.SegmentedGrid.Design.R' 'LT.SegmentedTrack.Design.R'
+        'Survey.R' 'LT.Survey.R' 'Point.Transect.R' 'PT.Survey.R'
         'Population.Summary.R' 'Simulation.Summary.R'
         'Single.Obs.LT.Survey.R' 'Single.Obs.PT.Survey.R'
         'accumulate.PP.results.R' 'add.dist.error.R'
@@ -53,6 +52,6 @@ Collate: 'generic.functions.R' 'DDF.Data.R' 'DDF.Analysis.R'
         'store.dht.results.R' 'uf.detect.R'
 RoxygenNote: 5.0.1
 NeedsCompilation: no
-Packaged: 2016-08-10 15:29:16 UTC; laura
+Packaged: 2016-10-04 21:11:43 UTC; laura
 Repository: CRAN
-Date/Publication: 2016-08-10 21:12:08
+Date/Publication: 2016-10-05 09:29:40

@@ -1,7 +1,7 @@
-99952bc857ed43848712ff2e7ab98896 *DESCRIPTION
+b849a8b78d44d745befca25afffccfcb *DESCRIPTION
 4940a0a49a9e9be9f7fa85a26abdd281 *NAMESPACE
-60fac59ce56f87dc4463181c84f1efd6 *NEWS
-81b4abde00cb58de804d456a799a40b2 *R/Class.Constructors.R
+2cca9c8e48c0895b2fc99782b88f762f *NEWS
+9bdb8f0ca1f9b53ca41694eb2c3a8b2c *R/Class.Constructors.R
 5dbc5045d1a243f1ca220c01ddac697d *R/DDF.Analysis.R
 29e55247c4e7219dd8e3e5648e4dc4f6 *R/DDF.Data.R
 2b308da5defff0dafc9a79799c7624c2 *R/DS.Analysis.R
@@ -13,6 +13,8 @@ bc5ce344c54481d0d8d5a9a50a2b274e *R/LT.Design.R
 cc2fcabf89016ffe044f6b737f0f98f1 *R/LT.EqAngle.ZZ.Design.R
 07ef0dc441119aa74fb6a8d5a9d80531 *R/LT.EqSpace.ZZ.Design.R
 98391fc9a3c1972d8d1f7b561091698c *R/LT.Random.Design.R
+49a1eabc17d8e215f336e521ab60952c *R/LT.SegmentedGrid.Design.R
+e2bbae29e9fea6b7b6d8ab14e9cb8cfa *R/LT.SegmentedTrack.Design.R
 177bb4376a998cfa5723f7f3f691a812 *R/LT.Survey.R
 e91a64f51632eb59b0e8e15a8712bf38 *R/LT.Survey.Results.R
 6a0c7d62543abc9230a4f32952eaa111 *R/LT.Systematic.Design.R
@@ -30,7 +32,7 @@ ddbf8fa99b4fe24b4ffccb95ab81cbb8 *R/Population.R
 c21cfd711062a340e93a16e965d480e8 *R/Region.R
 f27cac38e000fed842be212553b20155 *R/Region.Table.R
 98dd41092b840d98654e0d3c3b9d9ffd *R/Sample.Table.R
-bdcd27ff2f8112bad5b4a13e9e2337a7 *R/Simulation.R
+9949e28a577a58c6bf273f4574b29718 *R/Simulation.R
 3fdb5ef1f79b25422707efdf7f3fa090 *R/Simulation.Summary.R
 21df786e5d2a3bbc741197b5403cd355 *R/Single.Obs.DDF.Data.R
 7dca014058509cf86211bfe0c836f812 *R/Single.Obs.LT.Survey.R
@@ -49,7 +51,7 @@ a117699d8009b7d22bb4e3735e16f0e1 *R/Survey.Design.R
 2d995200731b4c9a813488b52852a1ff *R/check.shapefile.R
 67ec561bc5f55174677a257983139060 *R/coords.from.shapefile.R
 9aa3c2c479f4ded12fe8e54b9fec885d *R/create.bins.R
-a669dede0799a4299df1151920d82f19 *R/data.for.distance.R
+159c4bc803264a2ec51e5dfec064c4d2 *R/data.for.distance.R
 642ab6aef7733feb9b393a04cc0794f3 *R/description.summary.R
 0b8b821a166df243962054aab365ad22 *R/generate.pop.D.R
 c84664562ae7d108f8c0137666e1dd72 *R/generate.pop.N.R
@@ -106,7 +108,7 @@ d2c0213172d15745a380cfa3aee30713 *man/add.hotspot-methods.Rd
 042024046ff363f7348412eaef2ea9fa *man/create.region.table-methods.Rd
 3e4da65d69dc40fd28698b4e4ee351b2 *man/create.sample.table-methods.Rd
 62b58dd25987a7deac4988ee18548114 *man/create.survey.results-methods.Rd
-7101c6d956fe9a4a8002890d6eb8da29 *man/data.for.distance.Rd
+b409d1f595332bdd6dd4e39e5562a95a *man/data.for.distance.Rd
 97ca48044f2a59cd224009feb39b2852 *man/description.summary.Rd
 62c4c1453dd6d4e986c0de8bcb676d6e *man/generate.population-methods.Rd
 8e4a409a7f3a4c143e6f75bef5b5ff34 *man/generate.transects-methods.Rd
