@@ -28,6 +28,7 @@
 #' @param shapefile a shapefile of the region
 #' @param coords list of polygons describing the areas of interest
 #' @param gaps list of polygons describing the areas to be excluded
+#' @param check.LinkID boolean to check the order of the LinkID value in the attribute table. This is important if this shapefile was used in Distance to create the survey shapefiles as Distance would have re-ordered the strata in this way. Failing to re-order the strata will mean that the strata in DSsim will not match the transect strata ID values created by Distance. If you have created your surveys outside Distance you can turn this option off.
 #' @return object of class Region 
 #' @export
 #' @author Laura Marshall
@@ -42,8 +43,8 @@
 #'  coords = coords, gaps = gaps)
 #' plot(region)
 #' 
-make.region <- function(region.name, strata.name = character(0), units, area = numeric(0), shapefile = NULL, coords = list(), gaps = list()){
-    region <- new(Class="Region", region.name = region.name, strata.name = strata.name, units = units, area = area, shapefile = shapefile, coords = coords, gaps = gaps)
+make.region <- function(region.name, strata.name = character(0), units, area = numeric(0), shapefile = NULL, coords = list(), gaps = list(), check.LinkID = TRUE){
+    region <- new(Class="Region", region.name = region.name, strata.name = strata.name, units = units, area = area, shapefile = shapefile, coords = coords, gaps = gaps, check.LinkID = check.LinkID)
   return(region)
 }
   
@@ -160,6 +161,7 @@ make.design <- function(transect.type, design.details, region.obj, design.axis =
 #'  data.frame for each strata.
 #' @param x.space the intervals in the grid in the x direction
 #' @param y.space the intervals in the grid in the y direction
+#' @param buffer the width of the buffer region for generating the density grid. If not supplied DSsim will use the maximum value provided for the x.space or y.space.
 #' @param constant a value describing a constant density across the surface.
 #' @param density.gam \code{gam} object created using \code{mgcv}
 #' @param dsm not currently implemented
@@ -189,13 +191,13 @@ make.design <- function(transect.type, design.details, region.obj, design.axis =
 #' plot(region, add = TRUE)
 #' 
 #' }
-make.density <- function(region.obj, density.surface = list(), x.space, y.space, constant = numeric(0), density.gam = NULL, dsm = NULL, formula = NULL){
+make.density <- function(region.obj, density.surface = list(), x.space, y.space, buffer = numeric(0), constant = NULL, density.gam = NULL, dsm = NULL, formula = NULL){
   if(!is.null(constant)){
     if(length(region.obj@strata.name) > 0 & length(constant) != length(region.obj@strata.name)){
       stop("The length of the constant vector does not correspond to the number of strata", call. = FALSE)
     }
   }
-  density <- new(Class = "Density", region = region.obj, strata.name = region.obj@strata.name, density.surface = density.surface, x.space = x.space, y.space = y.space, constant = constant, density.gam = density.gam, jit = 1)
+  density <- new(Class = "Density", region = region.obj, strata.name = region.obj@strata.name, density.surface = density.surface, x.space = x.space, y.space = y.space, constant = constant, density.gam = density.gam, buffer = buffer)
  return(density)
 }
 
