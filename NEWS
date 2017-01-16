@@ -1,3 +1,27 @@
+DSsim 1.1.0
+-----------
+
+Notes
+
+  * read.from.file argument in generate.transects() function has been removed. Whether to read from file is now determined by whether the user has supplied a path argument to make.design().
+
+New Features
+
+  * Generates systematic point transect surveys (no need to generate survey shapefiles in Distance in advance).
+  * A check.sim.setup function to allow easier checking of the simulation setup.
+  * Default values so basic simulations can be run with minimal provision of arguments.
+  * Generates systematic line transect surveys (no need to generate survey shapefiles in Distance in advance).
+  * A vignette investigating the effects of truncation distance.
+  * Individual level covariates at the data generation and model fitting stages.
+  * Plotting functionality to show the effects of the covariates on detectability.
+  * Implements progress counter when running in serial and progress bar when running in parallel.
+  
+Bug Fixes
+
+  * Fixed bug in make.design which was looking to the global environment for an object called region.
+  * Ammended RMSE description in description summary
+  
+
 DSsim 1.0.8
 -----------
 
@@ -16,15 +40,16 @@ DSsim 1.0.7
 
 New Features
 
-  * Implements segmented track and segmented grid designs
-
+* Implements segmented track and segmented grid designs
 
 DSsim 1.0.6
 -----------
 
 Bug Fixes
 
-  * Fixed RMSE bug
+  * Fixed RMSE bug with NAs
+  * Fixed backwards compatability bug when no analysis strata exists in 
+  analysis objects
 
 DSsim 1.0.5
 -----------
@@ -35,7 +60,7 @@ Notes
 
 New Features
 
-  * Now implemented point transects 
+  * Now generates point transects including the generation of nested point transect designs (for dual receiver type acoustic surveys)
   * Now implements AICc and BIC model selection criteria in addition to AIC
   * Stores how many times each model was selected based on information criteria and displays this information in the simulation summary.
   * Stores the delta AIC/AICc/BIC to second best model if there is one (however, not currently displayed in summary)

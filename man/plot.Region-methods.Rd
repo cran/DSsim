@@ -6,7 +6,7 @@
 \title{Plot}
 \usage{
 \S4method{plot}{Region,ANY}(x, y, add = FALSE, plot.units = character(0),
-  region.col = NULL, gap.col = NULL, ...)
+  region.col = NULL, gap.col = NULL, main = "", ...)
 }
 \arguments{
 \item{x}{object of class Region}
@@ -22,6 +22,8 @@ and km}
 \item{region.col}{fill colour for the region}
 
 \item{gap.col}{fill colour for the gaps}
+
+\item{main}{character plot title}
 
 \item{...}{other general plot parameters}
 }

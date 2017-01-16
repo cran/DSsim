@@ -4,9 +4,9 @@
 \alias{make.density}
 \title{Creates a Density object}
 \usage{
-make.density(region.obj, density.surface = list(), x.space, y.space,
-  buffer = numeric(0), constant = NULL, density.gam = NULL, dsm = NULL,
-  formula = NULL)
+make.density(region.obj = make.region(), density.surface = list(),
+  x.space = 5, y.space = NULL, buffer = numeric(0),
+  constant = numeric(0), density.gam = NULL, dsm = NULL, formula = NULL)
 }
 \arguments{
 \item{region.obj}{the Region object in which the density grid will be created}
@@ -41,7 +41,15 @@ also supply a \code{mgcv gam} object and x, y spacings and the density grid will
 be created from these.
 }
 \examples{
-                 
+ 
+# A simple density surface with a constant value of 1 can be created within a rectangular 
+# region using 
+# the default values:
+density <- make.density()
+plot(density)
+plot(make.region(), add = TRUE)
+  
+# The example below shows hot to add high and low point to the density surface                   
 \dontrun{
 pop.density <- make.density(region.obj = region, x.space = 10, 
  y.space = 10, constant = 0.5) 
@@ -57,8 +65,8 @@ pop.density <- add.hotspot(pop.density, centre = c(300, 100),
 plot(pop.density)
 plot(region, add = TRUE)
 
-#Old style plotting
-plot(pop.density, contours = FALSE, old.style = TRUE)
+#Block style plotting
+plot(pop.density, contours = FALSE, style = "blocks")
 plot(region, add = TRUE)
 
 }

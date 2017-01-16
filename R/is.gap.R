@@ -1,4 +1,3 @@
-#' @importFrom splancs as.points
 is.gap <- function(poly, poly.list){
   #is.gap checks to see if a set of points belonging to one polygon are all inside any one of a list of polygons
   all.true <- function(pts.check){

@@ -6,7 +6,8 @@
 \title{Plot}
 \usage{
 \S4method{plot}{Density,ANY}(x, y, add = FALSE, plot.units = character(0),
-  contours = TRUE, style = "points", density.col = heat.colors(12), ...)
+  contours = TRUE, style = "points", density.col = heat.colors(12),
+  main = "", ...)
 }
 \arguments{
 \item{x}{object of class Density}
@@ -27,6 +28,8 @@ a coloured point at the centre of each grid cell where as
 blocks colours the entire cell.}
 
 \item{density.col}{the colours used to indicate density level}
+
+\item{main}{character plot title}
 
 \item{...}{other general plot parameters}
 }

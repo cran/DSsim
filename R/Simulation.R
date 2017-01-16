@@ -109,6 +109,11 @@ setValidity("Simulation",
                 return(FALSE)
               }
               design <- object@design
+              if(class(design) == "PT.Nested.Design"){
+                if(object@detectability@truncation > object@ddf.analyses[[1]]@truncation){
+                  warning("Please be aware that your truncation distance for analysis is less than that used to generate the data (defined in detectability). This will introduce bias into your estimates.", call. = FALSE, immediate. = TRUE)
+                }
+              }
               transects.from.file <- ifelse(length(design@path) == 1, TRUE, FALSE)
               if(transects.from.file & !object@single.transect.set){
                 no.files <- length(design@filenames)
@@ -117,8 +122,8 @@ setValidity("Simulation",
                   return(FALSE)
                 }
               }else if(!transects.from.file){
-                if(!(class(object@design) %in% c("PT.Nested.Design"))){
-                  message("The generation of transects is only implemented in R for nested point transect designs")
+                if(!(class(object@design) %in% c("PT.Nested.Design", "PT.Systematic.Design", "LT.Systematic.Design"))){
+                  message("The generation of transects is only implemented in R for nested and systematic point transect designs as well as systematic parallel line transect designs.")
                   return(FALSE)  
                 }
               }
@@ -137,7 +142,7 @@ setValidity("Simulation",
 #'  explanation of the summary should be included
 #' @param ... not implemented
 #' @rdname summary.Simulation-methods
-#' @importFrom stats na.omit
+#' @importFrom stats na.omit qlnorm qnorm
 #' @export
 setMethod(
   f="summary",
@@ -152,7 +157,6 @@ setMethod(
       x <- na.omit(x[1:reps])
       reps.success <- length(x)
       return( sqrt( sum((x-true.x)^2) / reps.success ))
-      #Probably should warn is reps.success does not equal number of times the simulation succeeded.
     }
     #Get number of reps
     reps <- object@reps
@@ -160,7 +164,10 @@ setMethod(
     strata.names <- object@region@strata.name
     strata.order <- NULL
     #Deal with any grouping of strata
-    analysis.strata <- object@ddf.analyses[[1]]@analysis.strata
+    analysis.strata <- try(object@ddf.analyses[[1]]@analysis.strata, silent = TRUE)
+    if(class(analysis.strata) == "try-error"){
+      analysis.strata <- data.frame()
+    }
     if(nrow(analysis.strata) > 0){
       #get strata names
       sub.strata.names <- strata.names
@@ -236,10 +243,19 @@ setMethod(
     individual.summary <- data.frame(mean.Cover.Area = object@results$individuals$summary[,"CoveredArea","mean"],
                                      mean.Effort = object@results$individuals$summary[,"Effort","mean"],
                                      mean.n = object@results$individuals$summary[,"n","mean"],
+                                     mean.n.miss.dist = object@results$individuals$summary[,"n.miss.dist","mean"],
                                      no.zero.n = zero.n,
                                      mean.ER = object@results$individuals$summary[,"ER","mean"],
                                      mean.se.ER = object@results$individuals$summary[,"se.ER","mean"],
                                      sd.mean.ER = object@results$individuals$summary[,"ER","sd"])
+    # Remove unnecessary columns
+    if(all(individual.summary$mean.n.miss.dist == 0)){
+      # To keep CRAN check happy!
+      eval(parse(text = paste("individual.summary <- subset(individual.summary, select = -mean.n.miss.dist)")))
+    }
+    if(all(individual.summary$no.zero.n == 0)){
+      eval(parse(text = paste("individual.summary <- subset(individual.summary, select = -no.zero.n)")))
+    }
     individual.N <- data.frame(Truth = true.N.individuals,
                                mean.Estimate = object@results$individuals$N[,"Estimate","mean"],
                                percent.bias = (object@results$individuals$N[,"Estimate","mean"] - true.N.individuals)/true.N.individuals*100,
@@ -283,11 +299,19 @@ setMethod(
       cluster.summary <- data.frame(mean.Cover.Area = object@results$clusters$summary[,"CoveredArea","mean"],
                                     mean.Effort = object@results$clusters$summary[,"Effort","mean"],
                                     mean.n = object@results$clusters$summary[,"n","mean"],
+                                    mean.n.miss.dist = object@results$clusters$summary[,"n.miss.dist","mean"],
                                     no.zero.n = zero.n,
                                     mean.k = object@results$clusters$summary[,"k","mean"],
                                     mean.ER = object@results$clusters$summary[,"ER","mean"],
                                     mean.se.ER = object@results$clusters$summary[,"se.ER","mean"],
                                     sd.mean.ER = object@results$clusters$summary[,"ER","sd"])
+      # Remove unnecessary columns
+      if(all(cluster.summary$mean.n.miss.dist == 0)){
+        eval(parse(text = paste("cluster.summary <- subset(cluster.summary,select = -mean.n.miss.dist)")))
+      }
+      if(all(cluster.summary$no.zero.n == 0)){
+        eval(parse(text = paste("cluster.summary <- subset(cluster.summary,select = -no.zero.n)")))
+      }
       cluster.N <- data.frame(Truth = true.N.clusters,
                               mean.Estimate = object@results$clusters$N[,"Estimate","mean"],
                               percent.bias = (object@results$clusters$N[,"Estimate","mean"] - true.N.clusters)/true.N.clusters*100,
@@ -336,15 +360,17 @@ setMethod(
                           LT.Random.Design = "Random Parallel Line Transect",
                           LT.User.Specified.Design = "Subjective Line Transect",
                           PT.Systematic.Design = "Systematic Point Transect",
+                          PT.Nested.Design = "Systematic Nested Point Transect",
                           PT.Random.Design = "Random Point Transect",
                           LT.SegmentedTrack.Design = "Segmented Track Line Transect",
                           LT.SegmentedGrid.Design = "Segmented Grid Line Transect")
     slots <- slotNames(object@design)
     design.parameters <- list()
+    count <- 1
     for(i in seq(along = slots)){
       if(slots[i] %in% c("design.axis", "spacing", "plus.sampling", "nested.space")){
         if(!(length(slot(object@design, slots[i])) == 0)){
-          design.parameters[[slots[i]]] <- slot(object@design, slots[i]) 
+          design.parameters[[slots[i]]] <- slot(object@design, slots[i])  
         }
       }
     }
@@ -380,8 +406,8 @@ setMethod(
   f="show",
   signature="Simulation",
   definition=function(object){
-    message("show not currently implemented")
-    invisible(object)
+    summary <- summary(object, description.summary = FALSE)
+    show(summary)
   }
 )
 
@@ -436,7 +462,7 @@ setMethod(
 setMethod(
   f="generate.transects",
   signature="Simulation",
-  definition=function(object, read.from.file = TRUE, write.to.file = FALSE, region = NULL){
+  definition=function(object, region = NULL){
     region <- object@region
     transect <- generate.transects(object@design, region = region)
     return(transect)
@@ -485,15 +511,27 @@ setMethod(
   f="run.analysis",
   signature=c("Simulation","Survey.Results"),
   definition=function(object, data, dht = FALSE){
-    #dist.data <- survey.results@ddf.data
     best.model <- run.analysis(object, data@ddf.data)
     #If dht is true but tables have not been provided
     if(dht & nrow(data@region.table@region.table) == 0){
       warning("dht tables have not been provided please re-run create.survey.results with dht.tables = TRUE if you would like density/abundance estimates in addition to ddf results.", immediate. = TRUE, call. = FALSE)
       dht = FALSE
     }
-    #If ddf has converged and dht it TRUE
+    #If ddf has converged and dht is TRUE
     if(dht & !is.null(best.model)){
+      #Check if there are missing distances
+      ddf.dat <- data@ddf.data@ddf.dat
+      miss.dists <- any(is.na(ddf.dat$distance))
+      if(miss.dists){
+        # Add the missing distance observations in to ddf object
+        missing.dists <- ddf.dat[is.na(ddf.dat$distance),]
+        # NA's break dht
+        missing.dists$distance <- rep(-1, nrow(missing.dists))
+        if(is.null(missing.dists$detected)){
+          missing.dists$detected <- rep(1, nrow(missing.dists))  
+        }
+        best.model <- add.miss.dists(missing.dists, best.model)
+      }
       #Calculate density/abundance
       dht.results <- dht(best.model, data@region.table@region.table, data@sample.table@sample.table, data@obs.table@obs.table)
       return(list(ddf = best.model, dht = dht.results))
@@ -573,7 +611,7 @@ setMethod(
     #set the transect index to 1
     orig.file.index <- object@design@file.index
     object@design@file.index <- 1
-    if(run.parallel & requireNamespace('parallel', quietly = TRUE)){
+    if(run.parallel & requireNamespace('parallel', quietly = TRUE) & requireNamespace('pbapply', quietly = TRUE)){
       # counts the number of cores you have
       nCores <- getOption("cl.cores", detectCores())
       if(!is.na(max.cores)){
@@ -584,13 +622,14 @@ setMethod(
       clusterEvalQ(myCluster, {
         require(DSsim)
       })
-      results <- parLapply(myCluster, X = as.list(1:object@reps), fun = single.simulation.loop, object = object, save.data = save.data, load.data = load.data, data.path = data.path)
+      results <- pbapply::pblapply(X= as.list(1:object@reps), FUN = single.simulation.loop, object = object, save.data = save.data, load.data = load.data, data.path = data.path, cl = myCluster)
+      #results <- parLapply(myCluster, X = as.list(1:object@reps), fun = single.simulation.loop, object = object, save.data = save.data, load.data = load.data, data.path = data.path)
       object <- accumulate.PP.results(simulation = object, results = results)
       stopCluster(myCluster)
     }else{
       #Check that it wasn't trying to run parallel
       if(run.parallel){
-        warning("Could not run in parallel, library(parallel) is not installed.")
+        warning("Could not run in parallel, library(parallel) or library(pbapply) is not installed.", immediate. = TRUE, call. = FALSE)
       }
       #otherwise loop
       for(i in 1:object@reps){
