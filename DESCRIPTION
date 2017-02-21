@@ -5,7 +5,7 @@ Suggests: testthat, parallel, pbapply, knitr, rmarkdown
 VignetteBuilder: knitr
 Type: Package
 Title: Distance Sampling Simulations
-Version: 1.1.0
+Version: 1.1.1
 LazyLoad: yes
 Author: Laura Marshall <lhm@st-and.ac.uk>
 Maintainer: Laura Marshall <lhm@st-and.ac.uk>
@@ -56,6 +56,6 @@ Collate: 'DDF.Data.R' 'generic.functions.R' 'DDF.Analysis.R'
         'store.ddf.results.R' 'store.dht.results.R'
 RoxygenNote: 5.0.1
 NeedsCompilation: no
-Packaged: 2017-01-16 16:38:56 UTC; laura
+Packaged: 2017-02-21 14:30:12 UTC; laura
 Repository: CRAN
-Date/Publication: 2017-01-17 00:23:53
+Date/Publication: 2017-02-21 16:46:17

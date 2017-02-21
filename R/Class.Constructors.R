@@ -16,19 +16,22 @@
 #' @include DS.Analysis.R
 
 #' @title Creates a Region object
-#' @description This creates an instance of the Region class. If the user supplied a 
-#' shapefile all information will be extracted from here. Otherwise the user
-#' needs to specify a list of polygons describing the areas of interest 
-#' (coords) and optionally a list of polygons describing the areas to 
-#' be excluded (gaps). If area is not specified it will be calculated.
+#' @description This creates an instance of the Region class. If the
+#' \code{shapefile} argument is supplied, all information will be extracted from
+#' there. Otherwise, the a list of polygons describing the areas of interest needs 
+#' to be supplied (\code{coords}) and optionally a list of polygons describing the 
+#' areas to be excluded (\code{gaps}). If \code{area} is not specified it will be 
+#' calculated.
 #' @param region.name the region name
-#' @param strata.name the strata names. If not supplied when there are 2 or mode strata default names of "A", "B", "C"... will be assigned.
-#' @param units the units given as a character (either 'm' or 'km')
+#' @param strata.name the stratum names (character vector, same length as the 
+#'   number of areas in the \code{shapefile} or \code{coords} arguments). If not supplied "A", "B", "C", ... will be assigned.
+#' @param units measurement units; either \code{"m"} for metres or \code{"km"} for 
+#'   kilometres.
 #' @param area the area of the region (optional - if not supplied it will be 
-#'   calculated for you using \code{areapl} from the splancs library)
-#' @param shapefile a shapefile of the study region. These can be loaded using the \code{read.shapefile} function in the shapefiles library.
-#' @param coords A list with one element per strata. Each element in the list is a list of dataframes describing the polygon coordinates. This allows multiple regions in each strata. The corrdinates should start and finish with the same point. By default DSsim will create a rectangular study region 2000 m by 500 m.
-#' @param gaps A list with one element per strata. Each element in the list is a list of dataframes describing the polygon coordinates. This allows multiple gaps in each strata. The corrdinates should start and finish with the same point.
+#'   calculated for you)
+#' @param shapefile a shapefile object of the region loaded into R using \code{read.shapefile(shape.name)} from the shapefiles library.
+#' @param coords A list with one element per stratum. Each element in the list is a list of dataframes describing the polygon coordinates. This allows multiple regions in each strata. The corrdinates should start and finish with the same point. By default DSsim will create a rectangular study region 2000 m by 500 m.
+#' @param gaps A list with one element per stratum giving the areas to be excluded from the study area (the "holes"). Each element in the list is a list of \code{data.frame}s describing the polygon coordinates. This allows multiple gaps in each stratum. The corrdinates should start and finish with the same point.
 #' @param check.LinkID boolean to check the order of the LinkID value in the attribute table. This is important if this shapefile was used in Distance to create the survey shapefiles as Distance would have re-ordered the strata in this way. Failing to re-order the strata will mean that the strata in DSsim will not match the transect strata ID values created by Distance. If you have created your surveys outside Distance you can turn this option off.
 #' @return object of class Region 
 #' @export
@@ -330,10 +333,10 @@ make.density <- function(region.obj = make.region(), density.surface = list(), x
 #' See examples for implementation.
 #'
 #' \tabular{lll}{ Distribution  \tab Parameters  \tab         \cr 
-#'                normal        \tab mu          \tab sigma   \cr
+#'                normal        \tab mean        \tab sd      \cr
 #'                poisson       \tab lambda      \tab         \cr
 #'                ztruncpois    \tab mean        \tab         \cr
-#'                lognormal     \tab mu          \tab sigma   \cr
+#'                lognormal     \tab meanlog     \tab sdlog   \cr
 #'               }
 #'
 #' @param region.obj the Region object in which this population exists (see \link{make.region}).
@@ -514,7 +517,7 @@ make.detectability <- function(key.function = "hn", scale.param = 25, shape.para
 #'  formula = ~1),~cds(key = "hr", formula = ~1)), method = "ds", 
 #'  criteria = "AIC")
 #'
-make.ddf.analysis.list <- function(dsmodel = list(~cds(key = "hn", formula = ~1)), mrmodel = NULL, method = "ds", criteria = "AIC", analysis.strata = data.frame(), truncation = 75, binned.data = FALSE, cutpoints = numeric(0)){
+make.ddf.analysis.list <- function(dsmodel = list(~cds(key = "hn", formula = ~1)), mrmodel = NULL, method = "ds", criteria = "AIC", analysis.strata = data.frame(), truncation = 50, binned.data = FALSE, cutpoints = numeric(0)){
   ddf.analyses <- list()
   if(method == "ds"){
     for(a in seq(along = dsmodel)){
@@ -638,9 +641,14 @@ make.ddf.analysis.list <- function(dsmodel = list(~cds(key = "hn", formula = ~1)
 #' }
 #' 
 make.simulation <- function(reps = 10, single.transect.set = FALSE, double.observer = FALSE, region.obj = make.region(), design.obj = make.design(), population.description.obj = make.population.description(), detectability.obj = make.detectability(), ddf.analyses.list = make.ddf.analysis.list()){
-  #Make the results arrays and store in a list
+  # Check to see if the analysis truncation distance is larger than the
+  # detectability trunation distance
+  if(ddf.analyses.list[[1]]@truncation > detectability.obj@truncation){
+    warning("The truncation distance for analysis is larger than the truncation distance for data generation, this will likely cause biased results.", immediate. = TRUE, call. = FALSE)
+  }
+  # Make the results arrays and store in a list
   no.strata <- ifelse(length(region.obj@strata.name) > 0, length(region.obj@strata.name)+1, 1) 
-  #Check to see if the strata are grouped in the analyses
+  # Check to see if the strata are grouped in the analyses
   new.strata.names <- NULL
   if(nrow(ddf.analyses.list[[1]]@analysis.strata) > 0){
     new.strata.names <- unique(ddf.analyses.list[[1]]@analysis.strata$analysis.id)  
