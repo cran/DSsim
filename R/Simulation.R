@@ -253,7 +253,7 @@ setMethod(
     #Calculates the percentage of times the true value is whithin the confidence intervals
     percent.capture <- (apply(capture, 2, sum, na.rm = TRUE)/nrow(na.omit(capture)))*100
     percent.capture.D <- (apply(capture.D, 2, sum, na.rm = TRUE)/nrow(na.omit(capture)))*100
-    zero.n <- apply(zero.n, 2, sum)
+    zero.n <- apply(zero.n, 2, sum, na.rm = TRUE)
     if(length(true.N.individuals) == 1){
       RMSE.N = apply(cbind(t(as.matrix(object@results$individuals$N[, "Estimate", 1:reps])), true.N.individuals), 1, calc.RMSE, reps = reps)
       RMSE.D = apply(cbind(t(as.matrix(object@results$individuals$D[, "Estimate", 1:reps])), true.D.individuals), 1, calc.RMSE, reps = reps)
@@ -270,7 +270,10 @@ setMethod(
                                      mean.se.ER = object@results$individuals$summary[,"se.ER","mean"],
                                      sd.mean.ER = object@results$individuals$summary[,"ER","sd"])
     # Remove unnecessary columns
-    if(all(individual.summary$mean.n.miss.dist == 0)){
+    if(all(is.na(individual.summary$mean.n.miss.dist))){
+      # To keep CRAN check happy!
+      eval(parse(text = paste("individual.summary <- subset(individual.summary, select = -mean.n.miss.dist)")))  
+    }else if(all(individual.summary$mean.n.miss.dist == 0)){
       # To keep CRAN check happy!
       eval(parse(text = paste("individual.summary <- subset(individual.summary, select = -mean.n.miss.dist)")))
     }
@@ -307,9 +310,9 @@ setMethod(
           zero.n[i, strat] <- ifelse(object@results$clusters$summary[strat, "n", i] == 0, TRUE, FALSE)
         }
       }
-      percent.capture <- (apply(capture, 2, sum, na.rn = TRUE)/nrow(na.omit(capture)))*100
+      percent.capture <- (apply(capture, 2, sum, na.rm = TRUE)/nrow(na.omit(capture)))*100
       percent.capture.D <- (apply(capture.D, 2, sum, na.rm = TRUE)/nrow(na.omit(capture.D)))*100
-      zero.n <- apply(zero.n, 2, sum)
+      zero.n <- apply(zero.n, 2, sum, na.rm = TRUE)
       if(length(true.N.clusters) == 1){
         RMSE.N = apply(cbind(t(as.matrix(object@results$clusters$N[, "Estimate", 1:reps])), true.N.clusters), 1, calc.RMSE, reps = reps)
         RMSE.D = apply(cbind(t(as.matrix(object@results$clusters$D[, "Estimate", 1:reps])), true.D.clusters), 1, calc.RMSE, reps = reps)
@@ -327,7 +330,9 @@ setMethod(
                                     mean.se.ER = object@results$clusters$summary[,"se.ER","mean"],
                                     sd.mean.ER = object@results$clusters$summary[,"ER","sd"])
       # Remove unnecessary columns
-      if(all(cluster.summary$mean.n.miss.dist == 0)){
+      if(all(is.na(cluster.summary$mean.n.miss.dist))){
+        eval(parse(text = paste("cluster.summary <- subset(cluster.summary,select = -mean.n.miss.dist)")))  
+      }else if(all(cluster.summary$mean.n.miss.dist == 0)){
         eval(parse(text = paste("cluster.summary <- subset(cluster.summary,select = -mean.n.miss.dist)")))
       }
       if(all(cluster.summary$no.zero.n == 0)){
@@ -344,7 +349,7 @@ setMethod(
                               sd.of.means = object@results$clusters$N[,"Estimate","sd"])
       cluster.D <- data.frame(Truth = true.D.clusters,
                               mean.Estimate = object@results$clusters$D[,"Estimate","mean"],
-                              percent.bias = abs(object@results$clusters$D[,"Estimate","mean"] - true.D.clusters)/true.D.clusters*100,
+                              percent.bias = (object@results$clusters$D[,"Estimate","mean"] - true.D.clusters)/true.D.clusters*100,
                               RMSE = RMSE.D,
                               #lcl = object@results$clusters$N[,"lcl","mean"],
                               #ucl = object@results$clusters$N[,"ucl","mean"],
@@ -370,7 +375,7 @@ setMethod(
     #Model selection table
     tab.model.selection <- table(object@results$Detection[,"SelectedModel",1:object@reps])
     #Create detectabilty summary
-    detectability.summary <- list(key.function = object@detectability@key.function, scale.param = object@detectability@scale.param, shape.param = object@detectability@shape.param, truncation = object@detectability@truncation)
+    detectability.summary <- list(key.function = object@detectability@key.function, scale.param = object@detectability@scale.param, shape.param = object@detectability@shape.param, cov.param = object@detectability@cov.param, truncation = object@detectability@truncation)
     #Create analysis summary
     analysis.summary <- list(dsmodels = list(), criteria = object@ddf.analyses[[1]]@criteria, truncation = object@ddf.analyses[[1]]@truncation)
     #Create design summary
@@ -408,9 +413,9 @@ setMethod(
       analysis.summary$dsmodels[[i]] <- object@ddf.analyses[[i]]@dsmodel
     }
     if(!is.null(object@results$clusters)){
-      summary.x <- new(Class = "Simulation.Summary", region.name = object@region@region.name, total.reps = object@reps, failures = no.fails, individuals = individuals, clusters = clusters, expected.size = expected.size, detection = detection, model.selection = tab.model.selection, design.summary = design.summary, detectability.summary = detectability.summary, analysis.summary = analysis.summary)
+      summary.x <- new(Class = "Simulation.Summary", region.name = object@region@region.name, strata.name = object@region@strata.name, total.reps = object@reps, failures = no.fails, individuals = individuals, clusters = clusters, expected.size = expected.size, population.covars = object@population.description@covariates, detection = detection, model.selection = tab.model.selection, design.summary = design.summary, detectability.summary = detectability.summary, analysis.summary = analysis.summary)
     }else{
-      summary.x <- new(Class = "Simulation.Summary", region.name = object@region@region.name, total.reps = object@reps, failures = no.fails, individuals = individuals, detection = detection, model.selection = tab.model.selection, design.summary = design.summary, detectability.summary = detectability.summary, analysis.summary = analysis.summary)
+      summary.x <- new(Class = "Simulation.Summary", region.name = object@region@region.name, strata.name = object@region@strata.name, total.reps = object@reps, failures = no.fails, individuals = individuals, population.covars = object@population.description@covariates, detection = detection, model.selection = tab.model.selection, design.summary = design.summary, detectability.summary = detectability.summary, analysis.summary = analysis.summary)
     }
     return(summary.x)
   }
@@ -443,16 +448,21 @@ setMethod(
 #' @export
 histogram.N.ests <- function(x, ...){
   reps <- x@reps
-  index <- dim(x@results$individuals$N)[1]
-  true.N <- sum(x@population.description@N)
-  if(!is.null(x@results$clusters)){
-    ests <- x@results$clusters$N[index, "Estimate", 1:reps]
-    hist(ests, main = "Histogram of Estimates", xlab = "Estimated Abundance of Clusters", ...) 
+  sum.sim <- summary(x, description.summary = FALSE)
+  if(sum.sim@failures == reps){
+    warning("None of the simulation repetitions were successful, cannot plot histogram of estimates.", immediate. = TRUE, call. = TRUE)
   }else{
-    ests <- x@results$individuals$N[index, "Estimate", 1:reps]
-    hist(ests, main = "Histogram of Estimates", xlab = "Estimated Abundance of Individuals", ...)  
+    index <- dim(x@results$individuals$N)[1]
+    true.N <- sum(x@population.description@N)
+    if(!is.null(x@results$clusters)){
+      ests <- x@results$clusters$N[index, "Estimate", 1:reps]
+      hist(ests, main = "Histogram of Estimates", xlab = "Estimated Abundance of Clusters", ...) 
+    }else{
+      ests <- x@results$individuals$N[index, "Estimate", 1:reps]
+      hist(ests, main = "Histogram of Estimates", xlab = "Estimated Abundance of Individuals", ...)  
+    }
+    abline(v = true.N, col = 2, lwd = 3, lty = 2)
   }
-  abline(v = true.N, col = 2, lwd = 3, lty = 2)
   invisible(x)
 }
 
@@ -632,26 +642,40 @@ setMethod(
     #set the transect index to 1
     orig.file.index <- object@design@file.index
     object@design@file.index <- 1
-    if(run.parallel & requireNamespace('parallel', quietly = TRUE) & requireNamespace('pbapply', quietly = TRUE)){
-      # counts the number of cores you have
-      nCores <- getOption("cl.cores", detectCores())
-      if(!is.na(max.cores)){
-        nCores <- min(nCores - 1, max.cores)
+    if(run.parallel){
+      if(!requireNamespace('parallel', quietly = TRUE) | !requireNamespace('pbapply', quietly = TRUE)){
+        warning("Could not run in parallel, library(pbapply) or library(parallel) is not installed.", immediate. = TRUE, call. = FALSE)  
+        run.parallel = FALSE
+      }else{
+        # counts the number of cores you have
+        nCores <- getOption("cl.cores", detectCores())
+        if(!is.na(max.cores)){
+          nCores <- min(nCores - 1, max.cores)
+        }
+        if(nCores <= 1){
+          warning("Could not run in parallel only one core available/requested (DSsim limits running in parallel to 1 less than the number of cores on the machine).", immediate. = TRUE, call. = FALSE)
+          run.parallel = FALSE
+        }  
       }
+    }
+    if(run.parallel){
       # intitialise the cluster
       myCluster <- makeCluster(nCores)
       clusterEvalQ(myCluster, {
         require(DSsim)
+        require(shapefiles)
       })
-      results <- pbapply::pblapply(X= as.list(1:object@reps), FUN = single.simulation.loop, object = object, save.data = save.data, load.data = load.data, data.path = data.path, cl = myCluster)
-      #results <- parLapply(myCluster, X = as.list(1:object@reps), fun = single.simulation.loop, object = object, save.data = save.data, load.data = load.data, data.path = data.path)
+      on.exit(stopCluster(myCluster))
+      if(counter){
+        results <- pbapply::pblapply(X= as.list(1:object@reps), FUN = single.simulation.loop, object = object, save.data = save.data, load.data = load.data, data.path = data.path, cl = myCluster, counter = FALSE)  
+      }else{
+        results <- parLapply(myCluster, X = as.list(1:object@reps), fun = single.simulation.loop, object = object, save.data = save.data, load.data = load.data, data.path = data.path, counter = FALSE) 
+      }
       object <- accumulate.PP.results(simulation = object, results = results)
       stopCluster(myCluster)
-    }else{
-      #Check that it wasn't trying to run parallel
-      if(run.parallel){
-        warning("Could not run in parallel, library(parallel) or library(pbapply) is not installed.", immediate. = TRUE, call. = FALSE)
-      }
+      on.exit()
+    }
+    if(!run.parallel){
       #otherwise loop
       for(i in 1:object@reps){
         object@results <- single.simulation.loop(i, object, save.data = save.data, load.data = load.data, data.path = data.path, counter = counter)
