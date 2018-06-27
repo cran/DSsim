@@ -1,14 +1,33 @@
 #' @importFrom utils flush.console
 #single.simulation.loop <- function(i, object){
-single.simulation.loop <- function(i, object, save.data, load.data, data.path = character(0), counter){
+single.simulation.loop <- function(i, object, save.data, load.data, data.path = character(0), counter, progress.file = "", in.parallel = FALSE){
   # Input: i - integer representing the loop number
   #        object - an object of class Simulation
   #
   # Output: the updated Simulation object 
   #
-  # Display to the user the progress of the simulation
+  # Display/write to file the progress of the simulation
   if(counter){
-    cat("\r", i, " out of ", object@reps,  " reps \r")  
+    if(progress.file == ""){
+      # Write to terminal
+      cat("\r", i, " out of ", object@reps,  " reps \r")  
+    }else{
+      # Calculate progress as an integer %
+      progress <- round(i/object@reps*100)
+      # Check if being run in parallel
+      if(in.parallel){
+        #If so load file to check if progress should be updated 
+        old.progress <- try(scan(progress.file, what=integer()), silent = TRUE)
+        if(class(old.progress) == "integer"){
+          #Only update if this is the latest progress (when running in parallel things may not be processed in exactly the right order)
+          if(progress > old.progress){
+            try(cat(progress, file = progress.file), silent = TRUE) 
+          } 
+        }
+      }else{
+        cat(progress, file = progress.file)  
+      }
+    }
   }
   flush.console()
   if(!load.data){
@@ -58,6 +77,8 @@ single.simulation.loop <- function(i, object, save.data, load.data, data.path = 
   #analyse survey if there are data to analyse
   if(nrow(ddf.data@ddf.dat[!is.na(ddf.data@ddf.dat$distance),]) >= 20){
     ddf.results <- run.analysis(object, ddf.data)
+    warnings <- ddf.results$warnings
+    ddf.results <- ddf.results$best.model
   }else{
     warning("There are too few data points (<20) to be analysed, skipping this iteration.", call. = FALSE, immediate. = TRUE)
     ddf.results <- NULL
@@ -89,7 +110,12 @@ single.simulation.loop <- function(i, object, save.data, load.data, data.path = 
     #Compute density / abundance estimates
     compute.dht = TRUE
     if(compute.dht){
-      dht.results <- try(dht(ddf.results, region.table@region.table, sample.table@sample.table, obs.table@obs.table), silent = TRUE)
+      dht.options <- list()
+      # if it is a point transect design
+      if(inherits(object@design, "PT.Design")){
+        dht.options$ervar <- "P3"  
+      }
+      dht.results <- try(dht(ddf.results, region.table@region.table, sample.table@sample.table, obs.table@obs.table, options = dht.options), silent = TRUE)
       if(class(dht.results) == "try-error"){
         warning(paste("Problem", strsplit(dht.results[1], "Error")[[1]][2], " dht results not being recorded for iteration ", i, sep=""), call. = FALSE, immediate. = TRUE)
       }else{
@@ -98,6 +124,6 @@ single.simulation.loop <- function(i, object, save.data, load.data, data.path = 
     }
   }
   object@results$filename <- object@design@filenames[object@design@file.index] 
-  return(object@results)
+  return(list(results = object@results, warnings = warnings))
 }
 

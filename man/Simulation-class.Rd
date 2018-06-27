@@ -47,7 +47,10 @@ parameters associated with the detection function.}
 \item{\code{results}}{A \code{"list"} of \code{"arrays"}; stores
 the estimated of abundance and density as well as other measures
 of interest.}
+
+\item{\code{warnings}}{A \code{"list"} to store warning and error messages}
 }}
+
 \section{Methods}{
 
 \describe{
@@ -75,8 +78,8 @@ of interest.}
  the whole simulation for the specified number of repetitions.}
 }
 }
+
 \seealso{
 \code{\link{make.simulation}}
 }
 \keyword{classes}
-

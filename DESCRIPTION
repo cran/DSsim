@@ -5,7 +5,7 @@ Suggests: testthat, parallel, pbapply, knitr, rmarkdown
 VignetteBuilder: knitr
 Type: Package
 Title: Distance Sampling Simulations
-Version: 1.1.2
+Version: 1.1.3
 LazyLoad: yes
 Author: Laura Marshall <lhm@st-and.ac.uk>
 Maintainer: Laura Marshall <lhm@st-and.ac.uk>
@@ -37,9 +37,11 @@ Collate: 'DDF.Data.R' 'generic.functions.R' 'DDF.Analysis.R'
         'Survey.R' 'LT.Survey.R' 'Point.Transect.R' 'PT.Survey.R'
         'Population.Summary.R' 'Simulation.Summary.R'
         'Single.Obs.LT.Survey.R' 'Single.Obs.PT.Survey.R'
-        'accumulate.PP.results.R' 'add.covariate.values.R'
-        'add.dist.error.R' 'add.miss.dists.R' 'add.summary.results.R'
-        'calc.area.R' 'calc.poss.detect.dists.lines.R'
+        'accumulate.PP.results.R' 'accumulate.warnings.R'
+        'add.covariate.values.R' 'add.dist.error.R' 'add.miss.dists.R'
+        'add.summary.results.R' 'calc.area.R'
+        'calc.poss.detect.dists.lines.R'
+        'calc.poss.detect.dists.lines.largeN.R'
         'calc.poss.detect.dists.points.R' 'calculate.fitted.R'
         'calculate.scale.param.R' 'check.LinkID.order.R'
         'check.covariates.R' 'check.intersection.R' 'check.shapefile.R'
@@ -50,12 +52,12 @@ Collate: 'DDF.Data.R' 'generic.functions.R' 'DDF.Analysis.R'
         'get.line.sampler.info.R' 'get.point.sampler.info.R'
         'get.shapefile.names.R' 'get.surface.constant.R'
         'get.surface.gam.R' 'hn.detect.R' 'hr.detect.R' 'in.polygons.R'
-        'is.gap.R' 'modify.strata.for.analysis.R' 'rename.duplicates.R'
-        'rtpois.R' 'save.sim.results.R' 'setcov.R'
-        'simulate.detections.R' 'single.simulation.loop.R'
+        'is.gap.R' 'message.handler.R' 'modify.strata.for.analysis.R'
+        'rename.duplicates.R' 'rtpois.R' 'save.sim.results.R'
+        'setcov.R' 'simulate.detections.R' 'single.simulation.loop.R'
         'store.ddf.results.R' 'store.dht.results.R'
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
 NeedsCompilation: no
-Packaged: 2017-07-03 22:42:53 UTC; laura
+Packaged: 2018-06-27 16:06:57 UTC; lhm
 Repository: CRAN
-Date/Publication: 2017-07-03 23:07:23 UTC
+Date/Publication: 2018-06-27 16:33:29 UTC
