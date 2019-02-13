@@ -45,7 +45,7 @@ setClass(Class = "DDF.Analysis", representation(dsmodel = "formula",
 setMethod(
   f="initialize",
   signature="DDF.Analysis",
-  definition=function(.Object, dsmodel = call(), criteria, analysis.strata, truncation, binned.data, cutpoints){
+  definition=function(.Object, dsmodel = call(), criteria = "AIC", analysis.strata = data.frame(), truncation = 50, binned.data = FALSE, cutpoints = numeric(0)){
     if(criteria %in% c("aic", "AIC", "bic", "BIC", "AICc")){
     }else{
       warning("This selection criteria is not currently supported (please select from 'AIC', 'BIC' or 'AICc'), the simulation is automatically changing it to AIC for this call", call. = FALSE, immediate. = TRUE)
@@ -128,16 +128,17 @@ setMethod(
                                       warning=function(w){W <<- w; invokeRestart("muffleWarning")})
     #check if there was an error, warning or non-convergence
     if(any(class(ddf.result) == "error")){
-      warnings <- message.handler(warnings, paste("Error: ", ddf.result$message, sep = ""))
+      warnings <- message.handler(warnings, paste("Error: ", ddf.result$message, " (Model call: ", as.character(object@dsmodel)[2], ")", sep = ""))
       ddf.result <- NA
     }else if(ddf.result$ds$converge != 0){
       ddf.result <- NA
+      warnings <- message.handler(warnings, paste("The following model failed to converge: ", object@dsmodel, sep = ""))
     }else if(any(predict(ddf.result)$fitted < 0)){
       ddf.result <- NA
       warnings <- message.handler(warnings, "Negative predictions, excluding these results")
     } 
     if(!is.null(W)){
-      warnings <- message.handler(warnings, W)
+      warnings <- message.handler(warnings, paste(W, " (Model call: ", as.character(object@dsmodel)[2], ")", sep = ""))
     } 
     return(list(ddf.result = ddf.result, warnings = warnings))
   }    

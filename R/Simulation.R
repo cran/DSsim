@@ -41,7 +41,8 @@
 #' @slot results A \code{"list"} of \code{"arrays"}; stores
 #'  the estimated of abundance and density as well as other measures
 #'  of interest.
-#' @slot warnings A \code{"list"} to store warning and error messages
+#' @slot warnings A \code{"list"} to store warnings and error messages encountered
+#'  during runtime.
 #' @section Methods:
 #' \describe{
 #'  \item{\code{add.hotspot}}{\code{signature=(object = "Simulation")}: adds
@@ -86,7 +87,7 @@ setClass("Simulation", representation(reps = "numeric",
 setMethod(
   f="initialize",
   signature="Simulation",
-  definition=function(.Object, reps, single.transect.set = FALSE, double.observer = FALSE, region, design, population.description, detectability, ddf.analyses, results){
+  definition=function(.Object, reps = 10, single.transect.set = FALSE, double.observer = FALSE, region = make.region(), design = make.design(), population.description = make.population.description(), detectability = make.detectability(), ddf.analyses = make.ddf.analysis.list(), results = list()){
     #Set slots
     .Object@reps            <- reps
     .Object@single.transect.set <- single.transect.set
@@ -97,6 +98,7 @@ setMethod(
     .Object@detectability   <- detectability
     .Object@ddf.analyses    <- ddf.analyses
     .Object@results         <- results
+    .Object@warnings        <- list()
     #Check object is valid
     validObject(.Object)
     # return object
@@ -142,7 +144,7 @@ setValidity("Simulation",
 #' @param object object of class Simulation
 #' @param description.summary logical indicating whether an
 #'  explanation of the summary should be included
-#' @param ... not implemented
+#' @param ... can specify if you want the maximum number of iterations to be used where at least one model converged (use.max.reps = TRUE) or only use iterations where all models converged (use.max.reps = FALSE)
 #' @rdname summary.Simulation-methods
 #' @importFrom stats na.omit qlnorm qnorm
 #' @export
@@ -153,6 +155,35 @@ setMethod(
     if(description.summary){
       description.summary()
     }
+    #Check if simulation object is up-to-date
+    object <- dssim.update(object, warn = FALSE)
+    #Get number of reps
+    reps <- object@reps
+    #Check for additional arguments
+    additional.args <- names(list(...))
+    if (!("use.max.reps" %in% additional.args)){
+      #By default exclude all iterations where one or more models failed to converge
+      use.max.reps = FALSE
+    }else{
+      use.max.reps = list(...)$use.max.reps
+    }
+    #Get index of iterations to use
+    model.count <- length(object@ddf.analyses)
+    #These will use max iters by default
+    results <- object@results
+    #Make backwards compatible
+    if("SuccessfulModels" %in% dimnames(object@results$Detection)[[2]]){
+      if(use.max.reps){
+        rep.index <- which(object@results$Detection[1,"SuccessfulModels",1:reps] > 0)
+      }else{
+        rep.index <- which(object@results$Detection[1,"SuccessfulModels",1:reps] == model.count)
+        results <- add.summary.results(results, length(object@ddf.analyses), use.max.reps = use.max.reps)
+      }  
+    }else{
+      #Otherwise get all repetitions where estimated abundance is not NA
+      rep.index <- which(!is.na(results$individuals$N[1,"Estimate",1:reps]))
+      use.max.reps = TRUE
+    }
     #Create function to calculate RMSE
     calc.RMSE <- function(x, reps){ 
       true.x <- x[(reps+1)]
@@ -160,8 +191,6 @@ setMethod(
       reps.success <- length(x)
       return( sqrt( sum((x-true.x)^2) / reps.success ))
     }
-    #Get number of reps
-    reps <- object@reps
     #Calculate true values
     strata.names <- object@region@strata.name
     strata.order <- NULL
@@ -191,7 +220,7 @@ setMethod(
     }else{
       #Re ordering in the same way as the results tables (think dht arranges them)
       for(strat in seq(along = strata.names)){
-        strata.order <- c(strata.order, which(strata.names == dimnames(object@results$individuals$N)[[1]][strat]))
+        strata.order <- c(strata.order, which(strata.names == dimnames(results$individuals$N)[[1]][strat]))
       }
       N <- object@population.description@N
       if(length(strata.names) > 0){
@@ -199,12 +228,11 @@ setMethod(
         N <- c(N, sum(N))
         areas <- c(object@region@area[strata.order], sum(object@region@area))
         strata.names <- c(strata.names[strata.order], "Pooled")
-        
       }else{
         areas <- object@region@area
       }
     }
-    if(is.null(object@results$clusters)){
+    if(is.null(results$clusters)){
       #If there are no clusters
       true.N.individuals <- N
       true.D.individuals <- true.N.individuals/areas
@@ -242,14 +270,15 @@ setMethod(
     }
     
     #Create summary tables
-    capture <- array(NA, dim = c(reps, length(true.N.individuals)))
-    capture.D <- array(NA, dim = c(reps, length(true.D.individuals)))
-    zero.n <- array(NA, dim = c(reps, length(true.N.individuals)))
+    included.reps <- length(rep.index)
+    capture <- array(NA, dim = c(included.reps, length(true.N.individuals)))
+    capture.D <- array(NA, dim = c(included.reps, length(true.D.individuals)))
+    zero.n <- array(NA, dim = c(included.reps, length(true.N.individuals)))
     for(strat in seq(along = true.N.individuals)){
-      for(i in 1:reps){
-        capture[i, strat] <- ifelse(object@results$individuals$N[strat, "lcl", i] < true.N.individuals[strat] & object@results$individuals$N[strat, "ucl", i] > true.N.individuals[strat], TRUE, FALSE)
-        capture.D[i, strat] <- ifelse(object@results$individuals$D[strat, "lcl", i] < true.D.individuals[strat] & object@results$individuals$D[strat, "ucl", i] > true.D.individuals[strat], TRUE, FALSE)
-        zero.n[i, strat] <- ifelse(object@results$individuals$summary[strat, "n", i] == 0, TRUE, FALSE)
+      for(i in seq(along = rep.index)){
+        capture[i, strat] <- ifelse(results$individuals$N[strat, "lcl", i] < true.N.individuals[strat] & results$individuals$N[strat, "ucl", i] > true.N.individuals[strat], TRUE, FALSE)
+        capture.D[i, strat] <- ifelse(results$individuals$D[strat, "lcl", i] < true.D.individuals[strat] & results$individuals$D[strat, "ucl", i] > true.D.individuals[strat], TRUE, FALSE)
+        zero.n[i, strat] <- ifelse(results$individuals$summary[strat, "n", i] == 0, TRUE, FALSE)
       }
     }
     #Calculates the percentage of times the true value is whithin the confidence intervals
@@ -257,20 +286,20 @@ setMethod(
     percent.capture.D <- (apply(capture.D, 2, sum, na.rm = TRUE)/nrow(na.omit(capture)))*100
     zero.n <- apply(zero.n, 2, sum, na.rm = TRUE)
     if(length(true.N.individuals) == 1){
-      RMSE.N = apply(cbind(t(as.matrix(object@results$individuals$N[, "Estimate", 1:reps])), true.N.individuals), 1, calc.RMSE, reps = reps)
-      RMSE.D = apply(cbind(t(as.matrix(object@results$individuals$D[, "Estimate", 1:reps])), true.D.individuals), 1, calc.RMSE, reps = reps)
+      RMSE.N = apply(cbind(t(as.matrix(results$individuals$N[, "Estimate", rep.index])), true.N.individuals), 1, calc.RMSE, reps = reps)
+      RMSE.D = apply(cbind(t(as.matrix(results$individuals$D[, "Estimate", rep.index])), true.D.individuals), 1, calc.RMSE, reps = reps)
     }else{
-      RMSE.N = apply(cbind(object@results$individuals$N[, "Estimate", 1:reps], true.N.individuals), 1, calc.RMSE, reps = reps) 
-      RMSE.D = apply(cbind(object@results$individuals$D[, "Estimate", 1:reps], true.D.individuals), 1, calc.RMSE, reps = reps)
+      RMSE.N = apply(cbind(results$individuals$N[, "Estimate", rep.index], true.N.individuals), 1, calc.RMSE, reps = reps) 
+      RMSE.D = apply(cbind(results$individuals$D[, "Estimate", rep.index], true.D.individuals), 1, calc.RMSE, reps = reps)
     }
-    individual.summary <- data.frame(mean.Cover.Area = object@results$individuals$summary[,"CoveredArea","mean"],
-                                     mean.Effort = object@results$individuals$summary[,"Effort","mean"],
-                                     mean.n = object@results$individuals$summary[,"n","mean"],
-                                     mean.n.miss.dist = object@results$individuals$summary[,"n.miss.dist","mean"],
+    individual.summary <- data.frame(mean.Cover.Area = results$individuals$summary[,"CoveredArea","mean"],
+                                     mean.Effort = results$individuals$summary[,"Effort","mean"],
+                                     mean.n = results$individuals$summary[,"n","mean"],
+                                     mean.n.miss.dist = ifelse("n.miss.dist" %in% dimnames(results$individuals$summary)[[2]], results$individuals$summary[,"n.miss.dist","mean"], NA),
                                      no.zero.n = zero.n,
-                                     mean.ER = object@results$individuals$summary[,"ER","mean"],
-                                     mean.se.ER = object@results$individuals$summary[,"se.ER","mean"],
-                                     sd.mean.ER = object@results$individuals$summary[,"ER","sd"])
+                                     mean.ER = results$individuals$summary[,"ER","mean"],
+                                     mean.se.ER = results$individuals$summary[,"se.ER","mean"],
+                                     sd.mean.ER = results$individuals$summary[,"ER","sd"])
     # Remove unnecessary columns
     if(all(is.na(individual.summary$mean.n.miss.dist))){
       # To keep CRAN check happy!
@@ -283,54 +312,50 @@ setMethod(
       eval(parse(text = paste("individual.summary <- subset(individual.summary, select = -no.zero.n)")))
     }
     individual.N <- data.frame(Truth = true.N.individuals,
-                               mean.Estimate = object@results$individuals$N[,"Estimate","mean"],
-                               percent.bias = (object@results$individuals$N[,"Estimate","mean"] - true.N.individuals)/true.N.individuals*100,
+                               mean.Estimate = results$individuals$N[,"Estimate","mean"],
+                               percent.bias = (results$individuals$N[,"Estimate","mean"] - true.N.individuals)/true.N.individuals*100,
                                RMSE = RMSE.N,
-                               #lcl = object@results$individuals$N[,"lcl","mean"],
-                               #ucl = object@results$individuals$N[,"ucl","mean"],
                                CI.coverage.prob = percent.capture/100,
-                               mean.se = object@results$individuals$N[,"se","mean"],
-                               sd.of.means = object@results$individuals$N[,"Estimate","sd"])
+                               mean.se = results$individuals$N[,"se","mean"],
+                               sd.of.means = results$individuals$N[,"Estimate","sd"])
     individual.D <- data.frame(Truth = true.D.individuals,
-                               mean.Estimate = object@results$individuals$D[,"Estimate","mean"],
-                               percent.bias = (object@results$individuals$D[,"Estimate","mean"] - true.D.individuals)/true.D.individuals*100,
+                               mean.Estimate = results$individuals$D[,"Estimate","mean"],
+                               percent.bias = (results$individuals$D[,"Estimate","mean"] - true.D.individuals)/true.D.individuals*100,
                                RMSE = RMSE.D,
-                               #lcl = object@results$individuals$N[,"lcl","mean"],
-                               #ucl = object@results$individuals$N[,"ucl","mean"],
                                CI.coverage.prob = percent.capture.D/100,
-                               mean.se = object@results$individuals$D[,"se","mean"],
-                               sd.of.means = object@results$individuals$D[,"Estimate","sd"])
+                               mean.se = results$individuals$D[,"se","mean"],
+                               sd.of.means = results$individuals$D[,"Estimate","sd"])
     
-    if(!is.null(object@results$clusters)){
-      capture <- array(NA, dim = c(reps, length(true.N.clusters)))
-      capture.D <- array(NA, dim = c(reps, length(true.D.clusters)))
-      zero.n <- array(NA, dim = c(reps, length(true.N.clusters)))
+    if(!is.null(results$clusters)){
+      capture <- array(NA, dim = c(included.reps, length(true.N.clusters)))
+      capture.D <- array(NA, dim = c(included.reps, length(true.D.clusters)))
+      zero.n <- array(NA, dim = c(included.reps, length(true.N.clusters)))
       for(strat in seq(along = true.N.clusters)){
-        for(i in 1:reps){
-          capture[i, strat] <- ifelse(object@results$clusters$N[strat, "lcl", i] < true.N.clusters[strat] & object@results$clusters$N[strat, "ucl", i] > true.N.clusters[strat], TRUE, FALSE)
-          capture.D[i, strat] <- ifelse(object@results$clusters$D[strat, "lcl", i] < true.D.clusters[strat] & object@results$clusters$D[strat, "ucl", i] > true.D.clusters[strat], TRUE, FALSE)
-          zero.n[i, strat] <- ifelse(object@results$clusters$summary[strat, "n", i] == 0, TRUE, FALSE)
+        for(i in seq(along = rep.index)){
+          capture[i, strat] <- ifelse(results$clusters$N[strat, "lcl", i] < true.N.clusters[strat] & results$clusters$N[strat, "ucl", i] > true.N.clusters[strat], TRUE, FALSE)
+          capture.D[i, strat] <- ifelse(results$clusters$D[strat, "lcl", i] < true.D.clusters[strat] & results$clusters$D[strat, "ucl", i] > true.D.clusters[strat], TRUE, FALSE)
+          zero.n[i, strat] <- ifelse(results$clusters$summary[strat, "n", i] == 0, TRUE, FALSE)
         }
       }
       percent.capture <- (apply(capture, 2, sum, na.rm = TRUE)/nrow(na.omit(capture)))*100
       percent.capture.D <- (apply(capture.D, 2, sum, na.rm = TRUE)/nrow(na.omit(capture.D)))*100
       zero.n <- apply(zero.n, 2, sum, na.rm = TRUE)
       if(length(true.N.clusters) == 1){
-        RMSE.N = apply(cbind(t(as.matrix(object@results$clusters$N[, "Estimate", 1:reps])), true.N.clusters), 1, calc.RMSE, reps = reps)
-        RMSE.D = apply(cbind(t(as.matrix(object@results$clusters$D[, "Estimate", 1:reps])), true.D.clusters), 1, calc.RMSE, reps = reps)
+        RMSE.N = apply(cbind(t(as.matrix(results$clusters$N[, "Estimate", rep.index])), true.N.clusters), 1, calc.RMSE, reps = reps)
+        RMSE.D = apply(cbind(t(as.matrix(results$clusters$D[, "Estimate", rep.index])), true.D.clusters), 1, calc.RMSE, reps = reps)
       }else{
-        RMSE.N = apply(cbind(object@results$clusters$N[, "Estimate", 1:reps], true.N.clusters), 1, calc.RMSE, reps = reps) 
-        RMSE.D = apply(cbind(object@results$clusters$D[, "Estimate", 1:reps], true.D.clusters), 1, calc.RMSE, reps = reps)
+        RMSE.N = apply(cbind(results$clusters$N[, "Estimate", rep.index], true.N.clusters), 1, calc.RMSE, reps = reps) 
+        RMSE.D = apply(cbind(results$clusters$D[, "Estimate", rep.index], true.D.clusters), 1, calc.RMSE, reps = reps)
       }
-      cluster.summary <- data.frame(mean.Cover.Area = object@results$clusters$summary[,"CoveredArea","mean"],
-                                    mean.Effort = object@results$clusters$summary[,"Effort","mean"],
-                                    mean.n = object@results$clusters$summary[,"n","mean"],
-                                    mean.n.miss.dist = object@results$clusters$summary[,"n.miss.dist","mean"],
+      cluster.summary <- data.frame(mean.Cover.Area = results$clusters$summary[,"CoveredArea","mean"],
+                                    mean.Effort = results$clusters$summary[,"Effort","mean"],
+                                    mean.n = results$clusters$summary[,"n","mean"],
+                                    mean.n.miss.dist = ifelse("n.miss.dist" %in% dimnames(results$clusters$summary)[[2]], results$clusters$summary[,"n.miss.dist","mean"], NA),
                                     no.zero.n = zero.n,
-                                    mean.k = object@results$clusters$summary[,"k","mean"],
-                                    mean.ER = object@results$clusters$summary[,"ER","mean"],
-                                    mean.se.ER = object@results$clusters$summary[,"se.ER","mean"],
-                                    sd.mean.ER = object@results$clusters$summary[,"ER","sd"])
+                                    mean.k = results$clusters$summary[,"k","mean"],
+                                    mean.ER = results$clusters$summary[,"ER","mean"],
+                                    mean.se.ER = results$clusters$summary[,"se.ER","mean"],
+                                    sd.mean.ER = results$clusters$summary[,"ER","sd"])
       # Remove unnecessary columns
       if(all(is.na(cluster.summary$mean.n.miss.dist))){
         eval(parse(text = paste("cluster.summary <- subset(cluster.summary,select = -mean.n.miss.dist)")))  
@@ -341,41 +366,41 @@ setMethod(
         eval(parse(text = paste("cluster.summary <- subset(cluster.summary,select = -no.zero.n)")))
       }
       cluster.N <- data.frame(Truth = true.N.clusters,
-                              mean.Estimate = object@results$clusters$N[,"Estimate","mean"],
-                              percent.bias = (object@results$clusters$N[,"Estimate","mean"] - true.N.clusters)/true.N.clusters*100,
+                              mean.Estimate = results$clusters$N[,"Estimate","mean"],
+                              percent.bias = (results$clusters$N[,"Estimate","mean"] - true.N.clusters)/true.N.clusters*100,
                               RMSE = RMSE.N,
-                              #lcl = object@results$clusters$N[,"lcl","mean"],
-                              #ucl = object@results$clusters$N[,"ucl","mean"],
+                              #lcl = results$clusters$N[,"lcl","mean"],
+                              #ucl = results$clusters$N[,"ucl","mean"],
                               CI.coverage.prob = percent.capture/100,
-                              mean.se = object@results$clusters$N[,"se","mean"],
-                              sd.of.means = object@results$clusters$N[,"Estimate","sd"])
+                              mean.se = results$clusters$N[,"se","mean"],
+                              sd.of.means = results$clusters$N[,"Estimate","sd"])
       cluster.D <- data.frame(Truth = true.D.clusters,
-                              mean.Estimate = object@results$clusters$D[,"Estimate","mean"],
-                              percent.bias = (object@results$clusters$D[,"Estimate","mean"] - true.D.clusters)/true.D.clusters*100,
+                              mean.Estimate = results$clusters$D[,"Estimate","mean"],
+                              percent.bias = (results$clusters$D[,"Estimate","mean"] - true.D.clusters)/true.D.clusters*100,
                               RMSE = RMSE.D,
-                              #lcl = object@results$clusters$N[,"lcl","mean"],
-                              #ucl = object@results$clusters$N[,"ucl","mean"],
+                              #lcl = results$clusters$N[,"lcl","mean"],
+                              #ucl = results$clusters$N[,"ucl","mean"],
                               CI.coverage.prob = percent.capture.D/100,
-                              mean.se = object@results$clusters$D[,"se","mean"],
-                              sd.of.means = object@results$clusters$D[,"Estimate","sd"])
+                              mean.se = results$clusters$D[,"se","mean"],
+                              sd.of.means = results$clusters$D[,"Estimate","sd"])
       expected.size <- data.frame(Truth = true.expected.s,
-                                  mean.Expected.S = object@results$expected.size[,"Expected.S","mean"],
-                                  percent.bias = abs(true.expected.s - object@results$expected.size[,"Expected.S","mean"])/true.expected.s*100,
-                                  mean.se.ExpS = object@results$expected.size[,"se.Expected.S","mean"],
-                                  sd.mean.ExpS = object@results$expected.size[,"Expected.S","sd"])
+                                  mean.Expected.S = results$expected.size[,"Expected.S","mean"],
+                                  percent.bias = abs(true.expected.s - results$expected.size[,"Expected.S","mean"])/true.expected.s*100,
+                                  mean.se.ExpS = results$expected.size[,"se.Expected.S","mean"],
+                                  sd.mean.ExpS = results$expected.size[,"Expected.S","sd"])
       clusters <- list(summary = cluster.summary, N = cluster.N, D = cluster.D)
     }
-    detection <- data.frame(mean.observed.Pa = object@results$Detection[,"True.Pa","mean"],
-                            mean.estimate.Pa = object@results$Detection[,"Pa","mean"],
-                            sd.estimate.Pa = object@results$Detection[,"Pa","sd"],
-                            mean.ESW = object@results$Detection[,"ESW","mean"],
-                            sd.ESW = object@results$Detection[,"ESW","sd"])
+    detection <- data.frame(mean.observed.Pa = results$Detection[,"True.Pa","mean"],
+                            mean.estimate.Pa = results$Detection[,"Pa","mean"],
+                            sd.estimate.Pa = results$Detection[,"Pa","sd"],
+                            mean.ESW = results$Detection[,"ESW","mean"],
+                            sd.ESW = results$Detection[,"ESW","sd"])
     #Find how many iterations failed
-    no.fails <- length(which(is.na(object@results$Detection[1,1,1:object@reps])))
+    no.fails <- reps - included.reps
     #print(individual.N.est)
     individuals <- list(summary = individual.summary, N = individual.N, D = individual.D)
     #Model selection table
-    tab.model.selection <- table(object@results$Detection[,"SelectedModel",1:object@reps])
+    tab.model.selection <- table(results$Detection[,"SelectedModel",rep.index])
     #Create detectabilty summary
     detectability.summary <- list(key.function = object@detectability@key.function, scale.param = object@detectability@scale.param, shape.param = object@detectability@shape.param, cov.param = object@detectability@cov.param, truncation = object@detectability@truncation)
     #Create analysis summary
@@ -414,10 +439,14 @@ setMethod(
     for(i in seq(along = object@ddf.analyses)){
       analysis.summary$dsmodels[[i]] <- object@ddf.analyses[[i]]@dsmodel
     }
-    if(!is.null(object@results$clusters)){
-      summary.x <- new(Class = "Simulation.Summary", region.name = object@region@region.name, strata.name = object@region@strata.name, total.reps = object@reps, failures = no.fails, individuals = individuals, clusters = clusters, expected.size = expected.size, population.covars = object@population.description@covariates, detection = detection, model.selection = tab.model.selection, design.summary = design.summary, detectability.summary = detectability.summary, analysis.summary = analysis.summary)
+    #For backwards compatibility
+    pop.covars <- try(object@population.description@covariates, silent = TRUE)
+    pop.covars <- ifelse(class(pop.covars) == "try-error", list(), pop.covars)
+    #Create simulation summary object
+    if(!is.null(results$clusters)){
+      summary.x <- new(Class = "Simulation.Summary", region.name = object@region@region.name, strata.name = object@region@strata.name, total.reps = object@reps, failures = no.fails, use.max.reps = use.max.reps, individuals = individuals, clusters = clusters, expected.size = expected.size, population.covars = pop.covars, detection = detection, model.selection = tab.model.selection, design.summary = design.summary, detectability.summary = detectability.summary, analysis.summary = analysis.summary)
     }else{
-      summary.x <- new(Class = "Simulation.Summary", region.name = object@region@region.name, strata.name = object@region@strata.name, total.reps = object@reps, failures = no.fails, individuals = individuals, population.covars = object@population.description@covariates, detection = detection, model.selection = tab.model.selection, design.summary = design.summary, detectability.summary = detectability.summary, analysis.summary = analysis.summary)
+      summary.x <- new(Class = "Simulation.Summary", region.name = object@region@region.name, strata.name = object@region@strata.name, total.reps = object@reps, failures = no.fails, use.max.reps = use.max.reps, individuals = individuals, population.covars = pop.covars, detection = detection, model.selection = tab.model.selection, design.summary = design.summary, detectability.summary = detectability.summary, analysis.summary = analysis.summary)
     }
     return(summary.x)
   }
@@ -547,6 +576,7 @@ setMethod(
     analysis.results <- run.analysis(object, data@ddf.data)
     best.model <- analysis.results$best.model
     object@warnings <- analysis.results$warnings
+    num.successful.models <- analysis.results$num.successful.models
     #If dht is true but tables have not been provided
     if(dht & nrow(data@region.table@region.table) == 0){
       warning("dht tables have not been provided please re-run create.survey.results with dht.tables = TRUE if you would like density/abundance estimates in addition to ddf results.", immediate. = TRUE, call. = FALSE)
@@ -574,9 +604,9 @@ setMethod(
         dht.options$ervar <- "P3"  
       }
       dht.results <- dht(best.model, data@region.table@region.table, data@sample.table@sample.table, data@obs.table@obs.table, options = dht.options)
-      return(list(ddf = best.model, dht = dht.results, warnings = object@warnings))
+      return(list(ddf = best.model, dht = dht.results, warnings = object@warnings, num.successful.models = num.successful.models))
     }
-    return(list(ddf = best.model, warnings = object@warnings))
+    return(list(ddf = best.model, warnings = object@warnings, num.successful.models = num.successful.models))
   }
 )
 
@@ -614,21 +644,21 @@ setMethod(
       }
     }
     #check that at least one model worked
-    no.successful.models <- length(which(!is.na(criteria)))
-    if(no.successful.models > 0){
+    num.successful.models <- length(which(!is.na(criteria)))
+    if(num.successful.models > 0){
       best.model.index <- which(criteria == min(na.omit(criteria)))
       best.model <- results[[best.model.index]]
       best.model$model.index <- best.model.index
       #If there is more than one sucessful model find the delta criteria to the 
       #second best model.
-      if(no.successful.models > 1){
+      if(num.successful.models > 1){
         sorted.criteria <- sort(criteria, na.last = NA)
         delta.criteria <- sorted.criteria[2] - sorted.criteria[1]
         best.model$delta.criteria <- delta.criteria
       }
-      return(list(best.model = best.model, warnings = object@warnings))
+      return(list(best.model = best.model, warnings = object@warnings, num.successful.models = num.successful.models))
     }else{
-      return(list(best.model = NULL, warnings = object@warnings))
+      return(list(best.model = NULL, warnings = object@warnings, num.successful.models = 0))
     }
   }
 )
@@ -642,9 +672,16 @@ setMethod(
   f="run",
   signature="Simulation",
   definition=function(object, run.parallel = FALSE, max.cores = NA, save.data = FALSE, load.data = FALSE, data.path = character(0), counter = TRUE, progress.file = ""){
+    #Check to see if the Simulation object is up-to-date
+    object <- dssim.update(object)
+    #Reset results arrays
+    object@results <- create.results.arrays(object@reps, object@region, object@ddf.analyses, object@population.description)
     #reset the error/warning message
-    object@warnings$message <- list()
-    object@warnings$counter <- list()
+    test <- try(object@warnings, silent = TRUE)
+    if(class(test) == "list"){
+      object@warnings$message <- list()
+      object@warnings$counter <- list()  
+    }
     #Note options save.data, load.data, data.path are not implemented in simulations run in parallel.
     #check the data.path ends in "/"
     if(length(data.path) > 0){
@@ -712,11 +749,18 @@ setMethod(
         object@warnings <- results$warnings
       }
     }
-    object@results <- add.summary.results(object@results)
+    object@results <- add.summary.results(object@results, length(object@ddf.analyses))
     object@design@file.index <- orig.file.index
     #Process warnings
-    for(i in seq(along = object@warnings$message)){
-      message(paste(object@warnings$message[[i]], " (occured ", object@warnings$counter[[i]], " times)"))
+    test <- try(object@warnings, silent = TRUE)
+    if(class(test) == "list"){
+      if(length(object@warnings$message) > 0){
+        message("Summary of warnings and errors:")
+        for(i in seq(along = object@warnings$message)){
+          message(paste(object@warnings$message[[i]], " (occurred ", object@warnings$counter[[i]], " times)"))
+        }  
+        message("-----")
+      }
     }
     return(object)
   }

@@ -8,9 +8,9 @@
 \usage{
 run(object, run.parallel = FALSE, max.cores = NA, ...)
 
-\S4method{run}{Simulation}(object, run.parallel = FALSE, max.cores = NA,
-  save.data = FALSE, load.data = FALSE, data.path = character(0),
-  counter = TRUE, progress.file = "")
+\S4method{run}{Simulation}(object, run.parallel = FALSE,
+  max.cores = NA, save.data = FALSE, load.data = FALSE,
+  data.path = character(0), counter = TRUE, progress.file = "")
 }
 \arguments{
 \item{object}{an object of class Simulation}

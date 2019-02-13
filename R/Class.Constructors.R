@@ -30,7 +30,7 @@
 #' @param area the area of the region (optional - if not supplied it will be 
 #'   calculated for you)
 #' @param shapefile a shapefile object of the region loaded into R using \code{read.shapefile(shape.name)} from the shapefiles library.
-#' @param coords A list with one element per stratum. Each element in the list is a list of dataframes describing the polygon coordinates. This allows multiple regions in each strata. The corrdinates should start and finish with the same point. By default DSsim will create a rectangular study region 2000 m by 500 m.
+#' @param coords A list with one element per stratum. Each element in the list is a list of dataframes describing the polygon coordinates. This allows multiple regions in each strata. The coordinates should start and finish with the same point. By default DSsim will create a rectangular study region 2000 m by 500 m.
 #' @param gaps A list with one element per stratum giving the areas to be excluded from the study area (the "holes"). Each element in the list is a list of \code{data.frame}s describing the polygon coordinates. This allows multiple gaps in each stratum. The corrdinates should start and finish with the same point.
 #' @param check.LinkID boolean to check the order of the LinkID value in the attribute table. This is important if this shapefile was used in Distance to create the survey shapefiles as Distance would have re-ordered the strata in this way. Failing to re-order the strata will mean that the strata in DSsim will not match the transect strata ID values created by Distance. If you have created your surveys outside Distance you can turn this option off.
 #' @return object of class Region 
@@ -104,10 +104,10 @@ make.region <- function(region.name = "region",
 #' @param region.obj the character name of the Region object where the survey is to be carried out.
 #' @param design.axis user may provide the angle of the design axis but not currently used
 #' @param spacing user may provide the systematic design spacing but but not currently used
-#' @param nested.space the number of spaces between nested points. If spacing = 1 then all points on the systematic design will be sepected.
+#' @param nested.space the number of spaces between nested points. If spacing = 1 then all points on the systematic design will be selected.
 #' @param no.complex the number of complex detectors to distribute based on simple random sampling of the systematic grid of detectors.
 #' @param angle user may provide the design angle (only relevant in equal angle zigzag designs) but not currently used
-#' @param plus.sampling logical vaule indicating whether a plus sampling protocol is used but not currently used
+#' @param plus.sampling logical value indicating whether a plus sampling protocol is used but not currently used
 #' @param path pathway giving the location of the folder of survey shapefiles 
 #' @return object of a class which inherits from class Survey.Design 
 #' @export
@@ -395,18 +395,6 @@ make.density <- function(region.obj = make.region(), density.surface = list(), x
 #' # Note that the covariate values have not affected the detectability (the scale parameter) to 
 #' # do this we need to set the cov.param argument in make.detectability. See ?make.detectability
 make.population.description <- make.pop.description <- function(region.obj = make.region(), density.obj = make.density(), covariates = list(), N = numeric(0), fixed.N = TRUE){
-  # Get the number of strata
-  no.strata <- ifelse(length(region.obj@strata.name) > 0, length(region.obj@strata.name), 1)
-  # Check covariate input
-  covariates <- check.covariates(covariates, no.strata)
-  # Check population size input
-  if(fixed.N){
-    if(length(N) == 0){
-      N <- rep(1000, no.strata)  
-    }else if(length(N) != no.strata){
-      stop("You have not supplied the correct number of constants for population size N for each strata", call. = FALSE)
-    }
-  }
   pop.description <- new(Class = "Population.Description", N = N, density = density.obj, region.obj = region.obj, covariates = covariates, gen.by.N = fixed.N)
   return(pop.description)
 }
@@ -534,7 +522,7 @@ make.ddf.analysis.list <- function(dsmodel = list(~cds(key = "hn", formula = ~1)
 #' to generate a population, create or read in transects, simulate the survey process
 #' and fit detection functions and estimate density / abundance. This function can be
 #' used by itself based on default values to create a simple line transect example, see
-#' Examples below. To create more comples simulations it is advisable to define the 
+#' Examples below. To create more complex simulations it is advisable to define the 
 #' different parts of the simulation individually before grouping them together. See
 #' the Arguments for links to the functions which make the definitions for the 
 #' individual simulation components. Example simulations can also be found at
@@ -646,39 +634,40 @@ make.simulation <- function(reps = 10, single.transect.set = FALSE, double.obser
   if(ddf.analyses.list[[1]]@truncation > detectability.obj@truncation){
     warning("The truncation distance for analysis is larger than the truncation distance for data generation, this will likely cause biased results.", immediate. = TRUE, call. = FALSE)
   }
-  # Make the results arrays and store in a list
-  no.strata <- ifelse(length(region.obj@strata.name) > 0, length(region.obj@strata.name)+1, 1) 
-  # Check to see if the strata are grouped in the analyses
-  new.strata.names <- NULL
-  if(nrow(ddf.analyses.list[[1]]@analysis.strata) > 0){
-    new.strata.names <- unique(ddf.analyses.list[[1]]@analysis.strata$analysis.id)  
-  }else{
-    new.strata.names <- NULL
-  }
-  if(length(region.obj@strata.name) > 0){
-    if(!is.null(new.strata.names)){
-      strata.name <- c(sort(new.strata.names), "Total")
-      no.strata <- length(strata.name)
-    }else{
-      strata.name <- c(sort(region.obj@strata.name), "Total")  
-    }
-  }else{
-    strata.name <- region.obj@region.name
-  }
-  individuals <- list(summary = array(NA, dim = c(no.strata, 8, reps+2), dimnames = list(strata.name, c("Area", "CoveredArea", "Effort", "n", "n.miss.dist", "ER", "se.ER", "cv.ER"), c(1:reps,"mean","sd"))), 
-                  N = array(NA, dim = c(no.strata, 6, reps+2), dimnames = list(strata.name, c("Estimate", "se", "cv", "lcl", "ucl", "df"), c(1:reps,"mean","sd"))), 
-                  D = array(NA, dim = c(no.strata, 6, reps+2), dimnames = list(strata.name, c("Estimate", "se", "cv", "lcl", "ucl", "df"), c(1:reps,"mean", "sd"))))
-  detection = array(NA, dim = c(1, 6, reps+2), dimnames = list("Pooled", c("True.Pa", "Pa", "ESW", "f(0)", "SelectedModel", "DeltaCriteria"), c(1:reps,"mean","sd")))
-  #create additional arrays if animals are in clusters
-  if(population.description.obj@size){
-    clusters <- list(summary = array(NA, dim = c(no.strata, 9, reps+2), dimnames = list(strata.name, c("Area", "CoveredArea", "Effort", "n", "n.miss.dist", "k", "ER", "se.ER", "cv.ER"), c(1:reps,"mean","sd"))), 
-                    N = array(NA, dim = c(no.strata, 6, reps+2), dimnames = list(strata.name, c("Estimate", "se", "cv", "lcl", "ucl", "df"), c(1:reps,"mean","sd"))), 
-                    D = array(NA, dim = c(no.strata, 6, reps+2), dimnames = list(strata.name, c("Estimate", "se", "cv", "lcl", "ucl", "df"), c(1:reps,"mean", "sd"))))
-    expected.size <- array(NA, dim = c(no.strata, 3, reps+2), dimnames = list(strata.name, c("Expected.S", "se.Expected.S", "cv.Expected.S"), c(1:reps,"mean","sd")))
-    results <- list(individuals = individuals, clusters = clusters, expected.size = expected.size, Detection = detection)
-  }else{
-    results <- list(individuals = individuals, Detection = detection)
-  }
+  results <- create.results.arrays(reps, region.obj, ddf.analyses.list, population.description.obj)
+  # # Make the results arrays and store in a list
+  # no.strata <- ifelse(length(region.obj@strata.name) > 0, length(region.obj@strata.name)+1, 1) 
+  # # Check to see if the strata are grouped in the analyses
+  # new.strata.names <- NULL
+  # if(nrow(ddf.analyses.list[[1]]@analysis.strata) > 0){
+  #   new.strata.names <- unique(ddf.analyses.list[[1]]@analysis.strata$analysis.id)  
+  # }else{
+  #   new.strata.names <- NULL
+  # }
+  # if(length(region.obj@strata.name) > 0){
+  #   if(!is.null(new.strata.names)){
+  #     strata.name <- c(sort(new.strata.names), "Total")
+  #     no.strata <- length(strata.name)
+  #   }else{
+  #     strata.name <- c(sort(region.obj@strata.name), "Total")  
+  #   }
+  # }else{
+  #   strata.name <- region.obj@region.name
+  # }
+  # individuals <- list(summary = array(NA, dim = c(no.strata, 8, reps+2), dimnames = list(strata.name, c("Area", "CoveredArea", "Effort", "n", "n.miss.dist", "ER", "se.ER", "cv.ER"), c(1:reps,"mean","sd"))), 
+  #                 N = array(NA, dim = c(no.strata, 6, reps+2), dimnames = list(strata.name, c("Estimate", "se", "cv", "lcl", "ucl", "df"), c(1:reps,"mean","sd"))), 
+  #                 D = array(NA, dim = c(no.strata, 6, reps+2), dimnames = list(strata.name, c("Estimate", "se", "cv", "lcl", "ucl", "df"), c(1:reps,"mean", "sd"))))
+  # detection = array(NA, dim = c(1, 7, reps+2), dimnames = list("Pooled", c("True.Pa", "Pa", "ESW", "f(0)", "SelectedModel", "DeltaCriteria", "SuccessfulModels"), c(1:reps,"mean","sd")))
+  # #create additional arrays if animals are in clusters
+  # if(population.description.obj@size){
+  #   clusters <- list(summary = array(NA, dim = c(no.strata, 9, reps+2), dimnames = list(strata.name, c("Area", "CoveredArea", "Effort", "n", "n.miss.dist", "k", "ER", "se.ER", "cv.ER"), c(1:reps,"mean","sd"))), 
+  #                   N = array(NA, dim = c(no.strata, 6, reps+2), dimnames = list(strata.name, c("Estimate", "se", "cv", "lcl", "ucl", "df"), c(1:reps,"mean","sd"))), 
+  #                   D = array(NA, dim = c(no.strata, 6, reps+2), dimnames = list(strata.name, c("Estimate", "se", "cv", "lcl", "ucl", "df"), c(1:reps,"mean", "sd"))))
+  #   expected.size <- array(NA, dim = c(no.strata, 3, reps+2), dimnames = list(strata.name, c("Expected.S", "se.Expected.S", "cv.Expected.S"), c(1:reps,"mean","sd")))
+  #   results <- list(individuals = individuals, clusters = clusters, expected.size = expected.size, Detection = detection)
+  # }else{
+  #   results <- list(individuals = individuals, Detection = detection)
+  # }
   #create a simulation object
   simulation <- new(Class = "Simulation", reps = reps, single.transect.set = single.transect.set, double.observer = double.observer, region = region.obj, design = design.obj, population.description = population.description.obj, detectability = detectability.obj, ddf.analyses = ddf.analyses.list, results = results)
   return(simulation)

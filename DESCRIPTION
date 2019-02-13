@@ -5,7 +5,7 @@ Suggests: testthat, parallel, pbapply, knitr, rmarkdown
 VignetteBuilder: knitr
 Type: Package
 Title: Distance Sampling Simulations
-Version: 1.1.3
+Version: 1.1.4
 LazyLoad: yes
 Author: Laura Marshall <lhm@st-and.ac.uk>
 Maintainer: Laura Marshall <lhm@st-and.ac.uk>
@@ -46,7 +46,8 @@ Collate: 'DDF.Data.R' 'generic.functions.R' 'DDF.Analysis.R'
         'calculate.scale.param.R' 'check.LinkID.order.R'
         'check.covariates.R' 'check.intersection.R' 'check.shapefile.R'
         'check.sim.setup.R' 'coords.from.shapefile.R' 'create.bins.R'
-        'data.for.distance.R' 'description.summary.R'
+        'create.results.arrays.R' 'data.for.distance.R'
+        'description.summary.R' 'dssim.update.R'
         'extract.spat.poly.coords.R' 'generate.pop.D.R'
         'generate.pop.N.R' 'get.ave.density.R' 'get.bound.box.R'
         'get.line.sampler.info.R' 'get.point.sampler.info.R'
@@ -56,8 +57,8 @@ Collate: 'DDF.Data.R' 'generic.functions.R' 'DDF.Analysis.R'
         'rename.duplicates.R' 'rtpois.R' 'save.sim.results.R'
         'setcov.R' 'simulate.detections.R' 'single.simulation.loop.R'
         'store.ddf.results.R' 'store.dht.results.R'
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
 NeedsCompilation: no
-Packaged: 2018-06-27 16:06:57 UTC; lhm
+Packaged: 2019-02-13 12:06:50 UTC; lhm
 Repository: CRAN
-Date/Publication: 2018-06-27 16:33:29 UTC
+Date/Publication: 2019-02-13 12:30:03 UTC

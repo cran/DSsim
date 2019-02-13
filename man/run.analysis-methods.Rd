@@ -14,7 +14,8 @@ run.analysis(object, data, ...)
 \S4method{run.analysis}{DDF.Analysis,DDF.Data}(object, data, dht = FALSE,
   point = FALSE, warnings = list())
 
-\S4method{run.analysis}{Simulation,Survey.Results}(object, data, dht = FALSE)
+\S4method{run.analysis}{Simulation,Survey.Results}(object, data,
+  dht = FALSE)
 
 \S4method{run.analysis}{Simulation,DDF.Data}(object, data, dht = FALSE)
 }
@@ -32,7 +33,7 @@ run.analysis(object, data, ...)
 \item{warnings}{a list of warnings and how many times they arose}
 }
 \value{
-a list containing an S3 ddf object and optionally an S3 dht object relating to the model with the miminum criteria.
+a list containing an S3 ddf object and optionally an S3 dht object relating to the model with the minimum criteria.
 }
 \description{
 This method carries out an analysis of distance sampling data. This method

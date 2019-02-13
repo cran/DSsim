@@ -12,8 +12,8 @@ description.summary <- function(){
   cat("~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
   cat("\nRegion          : the region name.")
   cat("\nNo. Repetitions : the number of times the simulation was repeated.")
-  cat("\nNo. Failures    : the number of times the simulation failed (too
-                  few sightings, model fitting failure etc.)\n")
+  cat("\nNo. Excluded Repetitions : the number of times the simulation failed 
+                  (too few sightings, model fitting failure etc.)\n")
   
   cat("\nSummary for Individuals\n")
   cat("~~~~~~~~~~~~~~~~~~~~~~~\n")
@@ -56,12 +56,13 @@ description.summary <- function(){
   
   cat("\n\nDetection Function Values\n")
   cat("~~~~~~~~~~~~~~~~~~~~~~~~~\n")
-  cat("\n mean.observed.Pa : mean proportion of animals observed in the covered 
-                    region.")  
-  cat("\n mean.estimte.Pa  : mean estimate of the proportion of animals observed 
-                    in the covered region.") 
+  cat("\n mean.observed.Pa : mean proportion of individuals/clusters observed in  
+                    the covered region.")  
+  cat("\n mean.estimte.Pa  : mean estimate of the proportion of individuals/
+                    clusters observed in the covered region.") 
   cat("\n sd.estimate.Pa   : standard deviation of the mean estimates of the 
-                    proportion of animals observed in the covered region.") 
+                    proportion of individuals/clusters observed in the 
+                    covered region.") 
   cat("\n mean.ESW         : mean estimated strip width.") 
   cat("\n sd.ESW           : standard deviation of the mean estimated strip widths.") 
   

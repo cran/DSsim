@@ -6,8 +6,9 @@
 \usage{
 make.design(transect.type = "line", design.details = "default",
   region.obj = "region", design.axis = 0, spacing = 100,
-  nested.space = numeric(0), no.complex = numeric(0), angle = numeric(0),
-  plus.sampling = logical(0), path = character(0))
+  nested.space = numeric(0), no.complex = numeric(0),
+  angle = numeric(0), plus.sampling = logical(0),
+  path = character(0))
 }
 \arguments{
 \item{transect.type}{character variable specifying either "Line" or "Point"}
@@ -20,13 +21,13 @@ make.design(transect.type = "line", design.details = "default",
 
 \item{spacing}{user may provide the systematic design spacing but but not currently used}
 
-\item{nested.space}{the number of spaces between nested points. If spacing = 1 then all points on the systematic design will be sepected.}
+\item{nested.space}{the number of spaces between nested points. If spacing = 1 then all points on the systematic design will be selected.}
 
 \item{no.complex}{the number of complex detectors to distribute based on simple random sampling of the systematic grid of detectors.}
 
 \item{angle}{user may provide the design angle (only relevant in equal angle zigzag designs) but not currently used}
 
-\item{plus.sampling}{logical vaule indicating whether a plus sampling protocol is used but not currently used}
+\item{plus.sampling}{logical value indicating whether a plus sampling protocol is used but not currently used}
 
 \item{path}{pathway giving the location of the folder of survey shapefiles}
 }
