@@ -18,7 +18,7 @@ temp <- hist(norm.vals, plot = FALSE)
 temp$density <- temp$density/temp$density[1]
 plot(temp, freq = FALSE, add = TRUE)
 
-## ----S4eg, warning=FALSE, message=FALSE, echo=TRUE-----------------------
+## ----S4eg, warning=FALSE, message=FALSE, echo=TRUE----------------------------
 
 # load DSsim
 library(DSsim)
@@ -67,7 +67,7 @@ detect <- make.detectability(scale.param = 10,
 plot(detect, pop.desc)
 
 
-## ----setup, warning=FALSE, message=FALSE---------------------------------
+## ----setup, warning=FALSE, message=FALSE--------------------------------------
 library(DSsim)
 
 ## ----region, warning=FALSE, message=FALSE, fig.width=4, fig.cap="Figure 5: The study region."----
@@ -114,7 +114,7 @@ plot(eg.density, style = "blocks", plot.units = "m")
 plot(region, add = TRUE)
 
 
-## ----popdesc1, warning=FALSE, message=FALSE------------------------------
+## ----popdesc1, warning=FALSE, message=FALSE-----------------------------------
 
 # Create the population description, with a population size N = 200
 pop.desc <- make.population.description(region.obj = region, 
@@ -122,7 +122,7 @@ pop.desc <- make.population.description(region.obj = region,
                                             N = 200)
 
 
-## ----popdesc2, warning=FALSE, message=FALSE------------------------------
+## ----popdesc2, warning=FALSE, message=FALSE-----------------------------------
 
 # Create the covariate list
 covariate.list <- list()
@@ -167,7 +167,7 @@ exp(log(120) + 1.5)
 # We can now visualise these detection functions
 plot(detect.cov, pop.desc.cov)
 
-## ----design, warning=FALSE, message=FALSE--------------------------------
+## ----design, warning=FALSE, message=FALSE-------------------------------------
 
 # Define the design
 design <- make.design(transect.type = "line",
@@ -182,19 +182,19 @@ transects <- generate.transects(design, region = region)
 plot(region, plot.units = "km")
 plot(transects, col = 4, lwd = 2)
 
-## ----analyses1-----------------------------------------------------------
+## ----analyses1----------------------------------------------------------------
 ddf.analyses <- make.ddf.analysis.list(dsmodel = list(~cds(key = "hn", formula = ~1),
                                                       ~cds(key = "hr", formula = ~1)), 
                                        method = "ds",
                                        criteria = "AIC",
                                        truncation = 600)
 
-## ----analyses2-----------------------------------------------------------
+## ----analyses2----------------------------------------------------------------
 ddf.analyses.cov <- make.ddf.analysis.list(dsmodel = list(~mcds(key = "hn", formula = ~sex)), 
                                            method = "ds",
                                            truncation = 600)
 
-## ----set.seed, echo = FALSE, eval = TRUE---------------------------------
+## ----set.seed, echo = FALSE, eval = TRUE--------------------------------------
 set.seed(474)
 
 ## ----check.sim, fig.height=5.5, fig.width=7.2, fig.cap="Figure 11: Example survey. Top left - the density suface with an example population. Top right - an example set of transects. Bottom left - the detections from the transects. Bottom right - A histogram of the distances from these observations to the transect it was detected."----
@@ -217,7 +217,7 @@ sim.cov <- make.simulation(reps = 999,
 # Produce simulation setup plots
 check.sim.setup(sim.cov)
 
-## ----run.sim1, eval = FALSE----------------------------------------------
+## ----run.sim1, eval = FALSE---------------------------------------------------
 #  
 #  # Truncation distances to iterate over
 #  truncation <- c(200, 400, 600)
@@ -300,7 +300,7 @@ rm(temp, temp2, ddf.result.hn, ddf.result.hr, eg.survey, n, ddf.dat, plot.title,
 
 #dev.off()
 
-## ----check.sim4, eval = FALSE--------------------------------------------
+## ----check.sim4, eval = FALSE-------------------------------------------------
 #  
 #  # Truncation distances to iterate over
 #  truncation <- c(200, 400, 600, 800, 1000)
@@ -328,7 +328,7 @@ rm(temp, temp2, ddf.result.hn, ddf.result.hr, eg.survey, n, ddf.dat, plot.title,
 #  names(cov.results.list) <- paste("t", truncation, sep = "")
 #  names(cov.summary.list) <- paste("t", truncation, sep = "")
 
-## ----covsimulation, eval = FALSE-----------------------------------------
+## ----covsimulation, eval = FALSE----------------------------------------------
 #  # Now include the ddf.analyses.cov in the simulation
 #  sim.cov <- make.simulation(reps = 999,
 #                         region.obj = region,
@@ -363,7 +363,7 @@ rm(temp, temp2, ddf.result.hn, ddf.result.hr, eg.survey, n, ddf.dat, plot.title,
 #  names(covmod.results.list) <- paste("t", truncation, sep = "")
 #  names(covmod.summary.list) <- paste("t", truncation, sep = "")
 
-## ----covsimulation2, eval = FALSE----------------------------------------
+## ----covsimulation2, eval = FALSE---------------------------------------------
 #  sim.cov <- make.simulation(reps = 999,
 #                         region.obj = region,
 #                         design.obj = design,
@@ -406,11 +406,11 @@ rm(temp, temp2, ddf.result.hn, ddf.result.hr, eg.survey, n, ddf.dat, plot.title,
 #  
 #  
 
-## ----runparallel, eval = FALSE, echo = TRUE------------------------------
+## ----runparallel, eval = FALSE, echo = TRUE-----------------------------------
 #  # Running simulations in parallel
 #  run(sim.cov, run.parallel = TRUE, max.cores = 7)
 
-## ----loadresults, eval = TRUE, echo = TRUE-------------------------------
+## ----loadresults, eval = TRUE, echo = TRUE------------------------------------
 
 # Simulations using a simple half normal detection function
 data(trunc_summary)
@@ -422,7 +422,7 @@ data(trunc_cov_summary)
 data(covmod_summary)
 data(cov_param)
 
-## ----displaysummary, eval = FALSE, echo = TRUE---------------------------
+## ----displaysummary, eval = FALSE, echo = TRUE--------------------------------
 #  
 #  # To view the full summary for the simple half normal simulation with a truncation distance of 200:
 #  summary.list$t200
@@ -431,7 +431,7 @@ data(cov_param)
 #  cov.summary.list$t600
 #  
 
-## ----maketables, eval = FALSE, echo = TRUE-------------------------------
+## ----maketables, eval = FALSE, echo = TRUE------------------------------------
 #  
 #  library(knitr)
 #  
@@ -461,7 +461,7 @@ data(cov_param)
 #        format = "html")
 #  
 
-## ----maketables1, eval = TRUE, echo = FALSE------------------------------
+## ----maketables1, eval = TRUE, echo = FALSE-----------------------------------
 
 library(knitr)
 
@@ -491,7 +491,7 @@ kable(sim.data,
       format = "html")
 
 
-## ----maketables2, eval= TRUE, echo = FALSE-------------------------------
+## ----maketables2, eval= TRUE, echo = FALSE------------------------------------
 
 N    <- unlist(lapply(cov.summary.list, function(x){x@individuals$N$mean.Estimate}))
 n    <- unlist(lapply(cov.summary.list, function(x){x@individuals$summary$mean.n}))
@@ -519,7 +519,7 @@ kable(sim.data,
       format = "html")
 
 
-## ----maketables3, eval= TRUE, echo = FALSE-------------------------------
+## ----maketables3, eval= TRUE, echo = FALSE------------------------------------
 
 N    <- unlist(lapply(covmod.summary.list, function(x){x@individuals$N$mean.Estimate}))
 n    <- unlist(lapply(covmod.summary.list, function(x){x@individuals$summary$mean.n}))

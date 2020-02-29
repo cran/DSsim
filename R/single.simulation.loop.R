@@ -10,7 +10,7 @@ single.simulation.loop <- function(i, object, save.data, load.data, data.path = 
   if(counter){
     if(progress.file == ""){
       # Write to terminal
-      cat("\r", i, " out of ", object@reps,  " reps \r")  
+      message("\r", i, " out of ", object@reps,  " reps     \r", appendLF = FALSE)  
     }else{
       # Calculate progress as an integer %
       progress <- round(i/object@reps*100)
@@ -83,6 +83,7 @@ single.simulation.loop <- function(i, object, save.data, load.data, data.path = 
   }else{
     warning("There are too few data points (<20) to be analysed, skipping this iteration.", call. = FALSE, immediate. = TRUE)
     ddf.results <- NULL
+    warnings <- object@warnings
   }
   #Check at least one model worked
   if(!is.null(ddf.results)){
